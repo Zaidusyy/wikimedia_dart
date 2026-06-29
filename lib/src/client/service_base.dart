@@ -59,7 +59,7 @@ mixin ServiceBase {
               uri: uri,
             ),
           );
-      return handleResponse(response, parser);
+      return await handleResponse(response, parser);
     } on WikiException {
       // Already a typed Wikimedia Dart error — do not re-wrap.
       rethrow;
