@@ -61,7 +61,7 @@ void main() async {
 To comply with the [Wikimedia User-Agent Policy](https://meta.wikimedia.org/wiki/User-Agent_policy), all applications accessing Wikimedia APIs must supply a clear, descriptive, and unique `User-Agent` header. This allows Wikimedia sysadmins to identify your application and contact you in case of excessive resource consumption, avoiding automated IP-based rate limiting or blocks.
 
 By default, `WikiClient` generates a generic User-Agent:
-`WikimediaDart/0.1.0-beta.1 (https://github.com/zaidsayyed/wikimedia_dart)`
+`WikimediaDart/0.1.0-beta.1 (https://github.com/Zaidusyy/wikimedia_dart)`
 
 ### Customizing the User-Agent (Recommended)
 

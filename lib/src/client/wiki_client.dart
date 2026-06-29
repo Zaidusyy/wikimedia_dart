@@ -40,7 +40,7 @@ class WikiClient {
     WikiProject project = WikiProject.wikipedia,
     Duration timeout = const Duration(seconds: 30),
     String userAgent =
-        'WikimediaDart/0.1.0 (https://github.com/zaidsayyed/wikimedia_dart)',
+        'WikimediaDart/0.1.0 (https://github.com/Zaidusyy/wikimedia_dart)',
     String? customBaseUrl,
     http.Client? httpClient,
   })  : _config = WikiConfig(
@@ -72,7 +72,7 @@ class WikiClient {
     String language = 'en',
     Duration timeout = const Duration(seconds: 30),
     String userAgent =
-        'WikimediaDart/0.1.0-beta.1 (https://github.com/zaidsayyed/wikimedia_dart)',
+        'WikimediaDart/0.1.0-beta.1 (https://github.com/Zaidusyy/wikimedia_dart)',
     http.Client? httpClient,
   }) =>
       WikiClient._internal(
@@ -90,7 +90,7 @@ class WikiClient {
     String language = 'en',
     Duration timeout = const Duration(seconds: 30),
     String userAgent =
-        'WikimediaDart/0.1.0-beta.1 (https://github.com/zaidsayyed/wikimedia_dart)',
+        'WikimediaDart/0.1.0-beta.1 (https://github.com/Zaidusyy/wikimedia_dart)',
     http.Client? httpClient,
   }) =>
       WikiClient._internal(
@@ -109,7 +109,7 @@ class WikiClient {
   factory WikiClient.commons({
     Duration timeout = const Duration(seconds: 30),
     String userAgent =
-        'WikimediaDart/0.1.0-beta.1 (https://github.com/zaidsayyed/wikimedia_dart)',
+        'WikimediaDart/0.1.0-beta.1 (https://github.com/Zaidusyy/wikimedia_dart)',
     http.Client? httpClient,
   }) =>
       WikiClient._internal(
@@ -132,7 +132,7 @@ class WikiClient {
     String language = 'en',
     Duration timeout = const Duration(seconds: 30),
     String userAgent =
-        'WikimediaDart/0.1.0-beta.1 (https://github.com/zaidsayyed/wikimedia_dart)',
+        'WikimediaDart/0.1.0-beta.1 (https://github.com/Zaidusyy/wikimedia_dart)',
     http.Client? httpClient,
   }) =>
       WikiClient._internal(

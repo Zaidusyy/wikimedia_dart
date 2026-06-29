@@ -23,7 +23,7 @@ This document details the checklist to be executed before publishing new release
     `dart run example/main.dart`
 - **User-Agent Verification**:
   - Ensure default User-Agent strings in the constructors match the new version format:
-    `WikimediaDart/<version> (https://github.com/zaidsayyed/wikimedia_dart)`
+    `WikimediaDart/<version> (https://github.com/Zaidusyy/wikimedia_dart)`
 
 ## Quality Assurance & Verification
 
