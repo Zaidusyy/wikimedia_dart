@@ -1,0 +1,29 @@
+﻿{
+  "pages": [
+    {
+      "title": "Outer_space",
+      "displaytitle": "Outer space",
+      "pageid": 22621,
+      "lang": "en",
+      "description": "Void that exists between celestial bodies",
+      "extract": "Outer space is the expanse that exists beyond Earth and between celestial bodies.",
+      "extract_html": "<p>Outer space is the expanse...</p>",
+      "thumbnail": {
+        "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Earth-Moon.jpg/320px-Earth-Moon.jpg",
+        "width": 320,
+        "height": 240
+      },
+      "content_urls": {
+        "desktop": {
+          "page": "https://en.wikipedia.org/wiki/Outer_space"
+        },
+        "mobile": {
+          "page": "https://en.wikipedia.org/wiki/Outer_space"
+        }
+      },
+      "wikibase_item": "Q22621",
+      "timestamp": "2026-06-27T19:30:00Z"
+    }
+  ]
+}
+

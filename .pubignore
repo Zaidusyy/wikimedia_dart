@@ -1,0 +1,14 @@
+# Files to ignore when publishing to pub.dev
+
+# Local IDE and tool configuration files
+.dart_tool/
+.github/
+pubspec.lock
+
+# Test coverage output
+coverage/
+
+# Repository design documentation
+wikimedia_dart-v0.1-architecture.md
+doc/release_checklist.md
+doc/real_world_validation.md
