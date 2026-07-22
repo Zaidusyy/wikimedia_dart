@@ -14,7 +14,11 @@ jobs:
   test:
     name: Dart ${{ matrix.sdk }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    # Stable gates the build; beta is advisory and never fails the run.
+    continue-on-error: ${{ matrix.sdk == 'beta' }}
     strategy:
+      # Don't let one channel failing cancel the other.
+      fail-fast: false
       matrix:
         os: [ubuntu-latest]
         sdk: [stable, beta]
@@ -31,19 +35,30 @@ jobs:
       - name: Install dependencies
         run: dart pub get
 
+      # Formatting can differ between SDK versions, so gate on stable only.
       - name: Verify formatting
+        if: matrix.sdk == 'stable'
         run: dart format --output=none --set-exit-if-changed .
 
-      - name: Analyze (fatal infos)
+      # Stable is the strict gate. Beta is advisory: it still fails on real
+      # warnings/errors but not on new infos the pre-release analyzer may add.
+      - name: Analyze (strict)
+        if: matrix.sdk == 'stable'
         run: dart analyze --fatal-infos
+
+      - name: Analyze (advisory)
+        if: matrix.sdk == 'beta'
+        run: dart analyze
 
       - name: Run tests
         run: dart test --coverage=coverage
 
       - name: Activate coverage tool
+        if: matrix.sdk == 'stable'
         run: dart pub global activate coverage
 
       - name: Format coverage
+        if: matrix.sdk == 'stable'
         run: |
           dart pub global run coverage:format_coverage \
             --lcov \
@@ -52,6 +67,7 @@ jobs:
             --report-on=lib
 
       - name: Upload coverage to Codecov
+        if: matrix.sdk == 'stable'
         uses: codecov/codecov-action@v4
         with:
           file: coverage/lcov.info
