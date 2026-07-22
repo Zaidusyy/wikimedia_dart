@@ -67,7 +67,10 @@ void main() {
         );
       });
 
-      final wiki = WikiClient.wikipedia(httpClient: mock);
+      final wiki = WikiClient.wikipedia(
+        httpClient: mock,
+        retryPolicy: const RetryPolicy.none(),
+      );
       expect(
         () => wiki.pages.summary('Earth'),
         throwsA(isA<WikiRateLimitException>()
@@ -83,7 +86,10 @@ void main() {
         throw http.ClientException('Connection failed');
       });
 
-      final wiki = WikiClient.wikipedia(httpClient: mock);
+      final wiki = WikiClient.wikipedia(
+        httpClient: mock,
+        retryPolicy: const RetryPolicy.none(),
+      );
       expect(
         () => wiki.pages.summary('Earth'),
         throwsA(isA<WikiNetworkException>().having(
@@ -96,7 +102,10 @@ void main() {
         return http.Response('Internal Server Error', 500);
       });
 
-      final wiki = WikiClient.wikipedia(httpClient: mock);
+      final wiki = WikiClient.wikipedia(
+        httpClient: mock,
+        retryPolicy: const RetryPolicy.none(),
+      );
       expect(
         () => wiki.pages.summary('Earth'),
         throwsA(isA<WikiServerException>()
@@ -119,22 +128,28 @@ void main() {
       expect(html, mockHtml);
     });
 
-    test('related() returns List<PageSummary> on 200', () async {
+    test('related() returns List<SearchResultItem> via morelike on 200',
+        () async {
       final mockResponse =
-          fixture('responses/page_related_earth_contract.json');
+          fixture('responses/page_related_earth_morelike.json');
       final mock = MockClient((request) async {
-        expect(request.url.path, '/api/rest_v1/page/related/Earth');
+        // related() is backed by the search endpoint using morelike:.
+        expect(request.url.path, '/w/rest.php/v1/search/page');
+        expect(request.url.queryParameters['q'], 'morelike:Earth');
+        expect(request.url.queryParameters['limit'], '5');
         return http.Response(mockResponse, 200, headers: {
           'content-type': 'application/json; charset=utf-8',
         });
       });
 
       final wiki = WikiClient.wikipedia(httpClient: mock);
-      final related = await wiki.pages.related('Earth');
+      final related = await wiki.pages.related('Earth', limit: 5);
 
       expect(related, isNotEmpty);
-      expect(related.first.title, 'Outer_space');
-      expect(related.first.displayTitle, contains('Outer space'));
+      expect(related, everyElement(isA<SearchResultItem>()));
+      expect(related.first.title, 'Europa (moon)');
+      expect(related.first.pageId, 43127);
+      expect(related.first.description, 'Smallest Galilean moon of Jupiter');
     });
 
     test('User-Agent header is sent on every request', () async {
@@ -168,7 +183,10 @@ void main() {
       final mock = MockClient((request) async {
         return http.Response('Server Error', 500);
       });
-      final wiki = WikiClient.wikipedia(httpClient: mock);
+      final wiki = WikiClient.wikipedia(
+        httpClient: mock,
+        retryPolicy: const RetryPolicy.none(),
+      );
       expect(
         () => wiki.pages.html('Earth'),
         throwsA(isA<WikiServerException>()),
@@ -190,7 +208,10 @@ void main() {
       final mock = MockClient((request) async {
         return http.Response('Server Error', 500);
       });
-      final wiki = WikiClient.wikipedia(httpClient: mock);
+      final wiki = WikiClient.wikipedia(
+        httpClient: mock,
+        retryPolicy: const RetryPolicy.none(),
+      );
       expect(
         () => wiki.pages.related('Earth'),
         throwsA(isA<WikiServerException>()),

@@ -1,12 +1,12 @@
 import 'package:meta/meta.dart';
 
 import '../models/common/wiki_project.dart';
+import 'retry_policy.dart';
 
-/// Immutable configuration value object for a [WikiClient] instance.
+/// Immutable settings for a [WikiClient].
 ///
-/// This class centralises all per-client settings. No service class
-/// stores configuration independently; they all hold a reference to
-/// this shared object.
+/// One instance is shared by all of a client's service objects, so they
+/// always agree on language, timeout, and the rest.
 @immutable
 final class WikiConfig {
   /// Creates a [WikiConfig].
@@ -16,6 +16,7 @@ final class WikiConfig {
     required this.timeout,
     required this.userAgent,
     this.customBaseUrl,
+    this.retryPolicy = const RetryPolicy(),
   });
 
   /// BCP 47 language code, e.g. `'en'`, `'fr'`, `'zh'`.
@@ -29,8 +30,8 @@ final class WikiConfig {
 
   /// Value sent in the `User-Agent` request header.
   ///
-  /// Wikimedia's API terms of service require a descriptive User-Agent.
-  /// See https://www.mediawiki.org/wiki/API:Etiquette
+  /// Wikimedia asks every client to send a descriptive User-Agent; see
+  /// https://www.mediawiki.org/wiki/API:Etiquette
   final String userAgent;
 
   /// Base URL for custom / self-hosted MediaWiki installations.
@@ -38,9 +39,13 @@ final class WikiConfig {
   /// `null` for all standard Wikimedia-hosted projects.
   final String? customBaseUrl;
 
-  /// Resolves the effective language for a request.
+  /// Governs automatic retry of transient request failures.
   ///
-  /// If [override] is non-null it takes precedence over [language].
-  /// This allows per-call language switching without creating a new client.
+  /// Defaults to [RetryPolicy] with 3 retries and exponential backoff.
+  /// Use [RetryPolicy.none] to disable retries.
+  final RetryPolicy retryPolicy;
+
+  /// The language to use for a request: [override] if given, otherwise
+  /// [language]. Lets a single call target a different wiki edition.
   String resolveLanguage(String? override) => override ?? language;
 }

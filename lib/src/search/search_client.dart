@@ -6,11 +6,9 @@ import '../constants/endpoints.dart';
 import '../models/search/search_response.dart';
 import '../utils/url_builder.dart';
 
-/// Implements the `wiki.search.*` namespace.
-///
-/// Access this via [WikiClient.search] — do not instantiate directly.
+/// Search endpoints, reached through `wiki.search`.
 class SearchClient with ServiceBase {
-  /// Creates a [SearchClient].
+  /// Built by [WikiClient], which owns and shares [config] and [httpClient].
   SearchClient(this.config, this.httpClient, this._closedRef);
 
   @override
@@ -24,13 +22,10 @@ class SearchClient with ServiceBase {
   @override
   bool get isClosed => _closedRef();
 
-  /// Performs a full-text search and returns matching pages.
+  /// Full-text search for [query].
   ///
-  /// [query] is the search term. [limit] controls the maximum number of
-  /// results (default: 10, max: 100).
-  ///
-  /// [language] overrides the client's default language for this
-  /// request only.
+  /// [limit] caps the results (default 10, max 100). Pass [language] to search
+  /// a different wiki edition just for this call.
   Future<SearchResponse> pages(
     String query, {
     int limit = 10,
@@ -49,12 +44,9 @@ class SearchClient with ServiceBase {
     return get(uri, SearchResponse.fromJson);
   }
 
-  /// Returns a list of article titles matching the given prefix.
+  /// Returns article titles matching [prefix], for type-ahead UIs.
   ///
-  /// Suitable for autocomplete / type-ahead search UIs.
-  ///
-  /// [language] overrides the client's default language for this
-  /// request only.
+  /// Pass [language] to search a different wiki edition just for this call.
   Future<List<String>> autocomplete(
     String prefix, {
     int limit = 10,

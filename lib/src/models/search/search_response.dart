@@ -13,10 +13,10 @@ class SearchResponse {
   /// The list of search result items matching the query.
   final List<SearchResultItem> pages;
 
-  /// Pagination cursor for the next page of results.
+  /// Cursor for the next page of results.
   ///
-  /// `null` in v0.1 — pagination is a v0.2+ feature. The field is
-  /// present in the model now to avoid a breaking change later.
+  /// Always `null` for now; pagination lands in a later version. It's here
+  /// already so adding it won't be a breaking change.
   final String? nextCursor;
 
   /// Deserialises a [SearchResponse] from a JSON map.

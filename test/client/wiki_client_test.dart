@@ -58,6 +58,15 @@ void main() {
       expect(e.statusCode, 500);
     });
 
+    test('WikiRequestException carries a 4xx statusCode', () {
+      const e = WikiRequestException(
+        message: 'Request rejected (403)',
+        statusCode: 403,
+      );
+      expect(e, isA<WikiException>());
+      expect(e.statusCode, 403);
+    });
+
     test('WikiParseException is a WikiException with cause', () {
       const cause = FormatException('bad json');
       const e = WikiParseException(
@@ -154,7 +163,10 @@ void main() {
           'retry-after': '45',
         });
       });
-      final wiki = WikiClient.wikipedia(httpClient: mock);
+      final wiki = WikiClient.wikipedia(
+        httpClient: mock,
+        retryPolicy: const RetryPolicy.none(),
+      );
       expect(
         () => wiki.pages.summary('Earth'),
         throwsA(isA<WikiRateLimitException>().having(
@@ -170,7 +182,10 @@ void main() {
       final mock = MockClient((request) async {
         return http.Response('Server Error', 503, request: request);
       });
-      final wiki = WikiClient.wikipedia(httpClient: mock);
+      final wiki = WikiClient.wikipedia(
+        httpClient: mock,
+        retryPolicy: const RetryPolicy.none(),
+      );
       expect(
         () => wiki.pages.summary('Earth'),
         throwsA(isA<WikiServerException>().having(
@@ -183,8 +198,7 @@ void main() {
       wiki.close();
     });
 
-    test(
-        'WikiServerException teapot message contains unexpected status code and URL',
+    test('WikiRequestException teapot message contains 4xx status and URL',
         () async {
       final mock = MockClient((request) async {
         return http.Response('Teapot', 418, request: request);
@@ -192,13 +206,31 @@ void main() {
       final wiki = WikiClient.wikipedia(httpClient: mock);
       expect(
         () => wiki.pages.summary('Earth'),
-        throwsA(isA<WikiServerException>().having(
-          (e) => e.message,
-          'message',
-          contains(
-              'Unexpected status code: 418 at URL: https://en.wikipedia.org/api/rest_v1/page/summary/Earth'),
-        )),
+        throwsA(isA<WikiRequestException>()
+            .having((e) => e.statusCode, 'statusCode', 418)
+            .having(
+              (e) => e.message,
+              'message',
+              contains(
+                  'Request rejected (418) at URL: https://en.wikipedia.org/api/rest_v1/page/summary/Earth'),
+            )),
       );
+      wiki.close();
+    });
+
+    test('a 403 maps to WikiRequestException and is not retried', () async {
+      var calls = 0;
+      final mock = MockClient((request) async {
+        calls++;
+        return http.Response('Forbidden', 403, request: request);
+      });
+      final wiki = WikiClient.wikipedia(httpClient: mock);
+      await expectLater(
+        () => wiki.pages.summary('Earth'),
+        throwsA(isA<WikiRequestException>()
+            .having((e) => e.statusCode, 'statusCode', 403)),
+      );
+      expect(calls, 1, reason: '4xx client errors are not retried');
       wiki.close();
     });
   });

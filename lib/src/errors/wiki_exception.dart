@@ -1,10 +1,7 @@
-/// The full Wikimedia Dart exception hierarchy.
+/// The exception hierarchy thrown by this package.
 ///
-/// [WikiException] is a [sealed] class — this enables exhaustive
-/// `switch` expressions in consumer code. The Dart 3 compiler will warn
-/// if a new subtype is added but not handled in an exhaustive switch.
-///
-/// All subtypes are `final` — consumers should not subclass them.
+/// [WikiException] is sealed, so a `switch` over it can be checked for
+/// completeness at compile time. The subtypes are `final`; don't extend them.
 ///
 /// ```dart
 /// try {
@@ -13,9 +10,9 @@
 ///   print('Not found: ${e.message}');
 /// } on WikiRateLimitException catch (e) {
 ///   final wait = e.retryAfter ?? const Duration(seconds: 5);
-///   print('Rate limited — retry after ${wait.inSeconds}s');
+///   print('Rate limited, retry after ${wait.inSeconds}s');
 /// } on WikiException catch (e) {
-///   print('Wikimedia Dart error: ${e.message}');
+///   print(e.message);
 /// }
 /// ```
 library;
@@ -35,10 +32,9 @@ sealed class WikiException implements Exception {
   String toString() => '$runtimeType: $message';
 }
 
-/// A network-level failure — DNS resolution, socket error, or loss of
-/// connectivity.
+/// A network-level failure: DNS, socket, or lost connectivity.
 ///
-/// Wraps [http.ClientException] from `package:http`.
+/// Wraps the underlying `http.ClientException`.
 final class WikiNetworkException extends WikiException {
   /// Creates a [WikiNetworkException].
   const WikiNetworkException({
@@ -91,16 +87,37 @@ final class WikiRateLimitException extends WikiException {
   final Duration? retryAfter;
 }
 
+/// The server rejected the request with a 4xx status other than 404 or 429
+/// (e.g. 400 Bad Request, 401 Unauthorized, 403 Forbidden).
+///
+/// These point to a problem with the request itself (a bad title, a removed
+/// or restricted endpoint, missing authorization) and are never retried.
+final class WikiRequestException extends WikiException {
+  /// Creates a [WikiRequestException].
+  const WikiRequestException({
+    required super.message,
+    required this.statusCode,
+  });
+
+  /// The 4xx HTTP status code returned by the server.
+  final int statusCode;
+}
+
 /// The server returned a 5xx error.
 final class WikiServerException extends WikiException {
   /// Creates a [WikiServerException].
   const WikiServerException({
     required super.message,
     required this.statusCode,
+    this.retryAfter,
   });
 
   /// The HTTP status code returned by the server.
   final int statusCode;
+
+  /// Suggested wait time before retrying, parsed from the `Retry-After`
+  /// response header when present (e.g. on a 503). `null` otherwise.
+  final Duration? retryAfter;
 }
 
 /// The API response could not be deserialised into the expected model.

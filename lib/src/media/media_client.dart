@@ -7,11 +7,9 @@ import '../models/media/media_file.dart';
 import '../models/media/media_item.dart';
 import '../utils/url_builder.dart';
 
-/// Implements the `wiki.media.*` namespace.
-///
-/// Access this via [WikiClient.media] — do not instantiate directly.
+/// Media endpoints, reached through `wiki.media`.
 class MediaClient with ServiceBase {
-  /// Creates a [MediaClient].
+  /// Built by [WikiClient], which owns and shares [config] and [httpClient].
   MediaClient(this.config, this.httpClient, this._closedRef);
 
   @override
@@ -25,10 +23,9 @@ class MediaClient with ServiceBase {
   @override
   bool get isClosed => _closedRef();
 
-  /// Returns all media items embedded in the article with [title].
+  /// Lists the media embedded in the article [title].
   ///
-  /// [language] overrides the client's default language for this
-  /// request only.
+  /// Pass [language] to hit a different wiki edition just for this call.
   Future<List<MediaItem>> listForPage(
     String title, {
     String? language,
@@ -48,12 +45,10 @@ class MediaClient with ServiceBase {
     );
   }
 
-  /// Returns metadata for a specific media file by [fileTitle].
+  /// Metadata for a single file, e.g. one hosted on Commons.
   ///
-  /// [fileTitle] should include the `File:` prefix, e.g.
+  /// [fileTitle] should keep the `File:` prefix, like
   /// `'File:Earth_Western_Hemisphere.jpg'`.
-  ///
-  /// Primarily useful for querying files hosted on Wikimedia Commons.
   Future<MediaFile> getFile(String fileTitle) async {
     assertOpen();
     final uri = UrlBuilder.build(

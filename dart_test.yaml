@@ -1,0 +1,9 @@
+# Test runner configuration.
+#
+# Integration tests hit the live Wikimedia API and are skipped by default so
+# the unit suite stays fast and offline. Run them explicitly with:
+#
+#   dart test --run-skipped --tags integration
+tags:
+  integration:
+    skip: "Live Wikimedia API test. Run with: dart test --run-skipped --tags integration"

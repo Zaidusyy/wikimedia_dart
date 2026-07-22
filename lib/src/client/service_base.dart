@@ -5,16 +5,12 @@ import 'package:http/http.dart' as http;
 import '../client/wiki_config.dart';
 import '../errors/wiki_exception.dart';
 
-/// Base mixin shared by all Wikimedia Dart service clients.
+/// Shared request machinery for the service clients.
 ///
-/// Provides the shared request lifecycle:
-/// - Header construction
-/// - Timeout with [WikiTimeoutException]
-/// - HTTP status → [WikiException] mapping
-/// - JSON parsing with [WikiParseException]
-///
-/// Not part of the public API. Consumers interact only with
-/// [PagesClient], [SearchClient], and [MediaClient] via [WikiClient].
+/// Builds headers, applies the per-request timeout, maps HTTP status codes to
+/// a [WikiException], parses JSON, and retries transient failures. Internal:
+/// callers reach it through [WikiClient] and its `pages`, `search`, and
+/// `media` services.
 mixin ServiceBase {
   /// The shared HTTP client. Must be set by the concrete class.
   http.Client get httpClient;
@@ -41,11 +37,20 @@ mixin ServiceBase {
         'User-Agent': config.userAgent,
       };
 
-  /// Performs a GET request and maps the response to [T].
+  /// GETs [uri] and runs [parser] over the decoded JSON body.
   ///
-  /// Handles timeouts, network failures, and status-code-based
-  /// exception mapping. All Wikimedia Dart HTTP requests go through here.
+  /// Every JSON request in the package goes through here, so this is where
+  /// timeouts, error mapping, and retries all happen.
   Future<T> get<T>(
+    Uri uri,
+    T Function(Map<String, dynamic>) parser,
+  ) =>
+      _withRetry(uri, () => _getOnce(uri, parser));
+
+  /// GETs [uri] and returns the raw response body, e.g. HTML.
+  Future<String> getRaw(Uri uri) => _withRetry(uri, () => _getRawOnce(uri));
+
+  Future<T> _getOnce<T>(
     Uri uri,
     T Function(Map<String, dynamic>) parser,
   ) async {
@@ -59,9 +64,9 @@ mixin ServiceBase {
               uri: uri,
             ),
           );
-      return await handleResponse(response, parser);
+      return handleResponse(response, parser);
     } on WikiException {
-      // Already a typed Wikimedia Dart error — do not re-wrap.
+      // Already one of ours; let it through untouched.
       rethrow;
     } on http.ClientException catch (e) {
       throw WikiNetworkException(
@@ -78,8 +83,7 @@ mixin ServiceBase {
     }
   }
 
-  /// Performs a GET request expecting a raw string response (e.g. HTML).
-  Future<String> getRaw(Uri uri) async {
+  Future<String> _getRawOnce(Uri uri) async {
     try {
       final response = await httpClient
           .get(uri, headers: buildHeaders())
@@ -108,6 +112,42 @@ mixin ServiceBase {
     }
   }
 
+  /// Executes [attempt], retrying transient failures per the configured
+  /// [RetryPolicy]. The last failure is rethrown once retries are exhausted.
+  Future<T> _withRetry<T>(Uri uri, Future<T> Function() attempt) async {
+    final policy = config.retryPolicy;
+    var retries = 0;
+    while (true) {
+      try {
+        return await attempt();
+      } on WikiException catch (e) {
+        if (retries >= policy.maxRetries || !isRetryable(e)) rethrow;
+        final backoff = policy.backoffFor(retries, retryAfter: retryAfterOf(e));
+        await Future<void>.delayed(backoff);
+        retries++;
+      }
+    }
+  }
+
+  /// Whether [e] represents a transient failure that is safe to retry
+  /// for an idempotent `GET`.
+  bool isRetryable(WikiException e) => switch (e) {
+        WikiRateLimitException() => true,
+        WikiNetworkException() => true,
+        WikiTimeoutException() => true,
+        WikiServerException(:final statusCode) => statusCode >= 500,
+        WikiNotFoundException() => false,
+        WikiRequestException() => false,
+        WikiParseException() => false,
+      };
+
+  /// Extracts a server-supplied `Retry-After` duration from [e], if any.
+  Duration? retryAfterOf(WikiException e) => switch (e) {
+        WikiRateLimitException(:final retryAfter) => retryAfter,
+        WikiServerException(:final retryAfter) => retryAfter,
+        _ => null,
+      };
+
   /// Maps an HTTP response to [T] or throws the appropriate [WikiException].
   T handleResponse<T>(
     http.Response response,
@@ -134,6 +174,11 @@ mixin ServiceBase {
         }(),
       >= 500 => throw WikiServerException(
           message: 'Server error $statusCode at URL: ${url ?? "unknown"}',
+          statusCode: statusCode,
+          retryAfter: parseRetryAfter(response),
+        ),
+      >= 400 => throw WikiRequestException(
+          message: 'Request rejected ($statusCode) at URL: ${url ?? "unknown"}',
           statusCode: statusCode,
         ),
       _ => throw WikiServerException(
@@ -167,6 +212,11 @@ mixin ServiceBase {
         }(),
       >= 500 => throw WikiServerException(
           message: 'Server error $statusCode at URL: ${url ?? "unknown"}',
+          statusCode: statusCode,
+          retryAfter: parseRetryAfter(response),
+        ),
+      >= 400 => throw WikiRequestException(
+          message: 'Request rejected ($statusCode) at URL: ${url ?? "unknown"}',
           statusCode: statusCode,
         ),
       _ => throw WikiServerException(

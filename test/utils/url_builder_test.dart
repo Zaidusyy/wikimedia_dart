@@ -87,7 +87,7 @@ void main() {
       final uri = UrlBuilder.build(
         config: englishWikipedia,
         path: '/page/summary/Earth',
-        // languageOverride omitted → defaults to null → uses config.language
+        // No languageOverride, so it falls back to config.language.
       );
       expect(uri.host, 'en.wikipedia.org');
     });
@@ -105,7 +105,7 @@ void main() {
         config: englishWikipedia,
         path: '/page/summary/${Uri.encodeComponent('北京')}',
       );
-      // Exact encoding — Uri() must not double-encode the % from encodeComponent.
+      // Uri() must not double-encode the % that encodeComponent produced.
       expect(uri.path, contains('%E5%8C%97%E4%BA%AC'));
       expect(uri.path, isNot(contains('北京')));
     });
@@ -116,7 +116,7 @@ void main() {
     // ---------------------------------------------------------------------------
 
     test('Titles with slashes are percent-encoded and not double-encoded', () {
-      // 'AC/DC' → 'AC%2FDC'  (the slash must become %2F, not %252F)
+      // 'AC/DC' becomes 'AC%2FDC': the slash must be %2F, not %252F.
       final encoded = Uri.encodeComponent('AC/DC');
       expect(encoded, 'AC%2FDC');
       final uri = UrlBuilder.build(
@@ -130,7 +130,7 @@ void main() {
     test(
         'Titles with question marks are percent-encoded and not double-encoded',
         () {
-      // 'C#?' — the ? must become %3F, not be interpreted as query string start
+      // 'C#?': the ? must become %3F, not start a query string.
       final encoded = Uri.encodeComponent('C#?');
       expect(encoded, 'C%23%3F');
       final uri = UrlBuilder.build(
@@ -146,7 +146,7 @@ void main() {
     test(
         'Titles containing literal % are percent-encoded and not double-encoded',
         () {
-      // '100% true' → '100%25%20true'  (% becomes %25, space becomes %20)
+      // '100% true' becomes '100%25%20true': % is %25 and space is %20.
       final encoded = Uri.encodeComponent('100% true');
       expect(encoded, '100%25%20true');
       final uri = UrlBuilder.build(

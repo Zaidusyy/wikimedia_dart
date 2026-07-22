@@ -22,6 +22,18 @@ void main() async {
     }
     print('');
 
+    print('--- Related Pages ---');
+    final related = await wiki.pages.related('Earth', limit: 3);
+    for (final page in related) {
+      print('- ${page.title}');
+    }
+    print('');
+
+    print('--- Media On A Page ---');
+    final media = await wiki.media.listForPage('Earth');
+    print('${media.length} media items; first: ${media.first.title}');
+    print('');
+
     print('--- Language Override ---');
     final frenchSummary = await wiki.pages.summary('Terre', language: 'fr');
     print('Title (FR): ${frenchSummary.title}');

@@ -4,15 +4,14 @@ import '../media/media_client.dart';
 import '../models/common/wiki_project.dart';
 import '../pages/pages_client.dart';
 import '../search/search_client.dart';
+import 'retry_policy.dart';
 import 'wiki_config.dart';
 
-/// The primary entry point for the Wikimedia Dart SDK.
+/// The entry point for the package.
 ///
-/// Create one [WikiClient] per app (or per logical project/language
-/// combination) and reuse it across requests. A single client instance
-/// shares one HTTP connection pool.
-///
-/// **Always call [close] when finished to release resources.**
+/// Create one [WikiClient] per project/language and reuse it; each instance
+/// keeps a single HTTP connection pool. Call [close] when you're done to free
+/// it.
 ///
 /// ## Quick start
 ///
@@ -42,6 +41,7 @@ class WikiClient {
     String userAgent =
         'WikimediaDart/0.1.0 (https://github.com/Zaidusyy/wikimedia_dart)',
     String? customBaseUrl,
+    RetryPolicy retryPolicy = const RetryPolicy(),
     http.Client? httpClient,
   })  : _config = WikiConfig(
           language: language,
@@ -49,6 +49,7 @@ class WikiClient {
           timeout: timeout,
           userAgent: userAgent,
           customBaseUrl: customBaseUrl,
+          retryPolicy: retryPolicy,
         ),
         _httpClient = httpClient ?? http.Client(),
         _ownsHttpClient = httpClient == null;
@@ -72,7 +73,8 @@ class WikiClient {
     String language = 'en',
     Duration timeout = const Duration(seconds: 30),
     String userAgent =
-        'WikimediaDart/0.1.0-beta.1 (https://github.com/Zaidusyy/wikimedia_dart)',
+        'WikimediaDart/0.1.0 (https://github.com/Zaidusyy/wikimedia_dart)',
+    RetryPolicy retryPolicy = const RetryPolicy(),
     http.Client? httpClient,
   }) =>
       WikiClient._internal(
@@ -81,6 +83,7 @@ class WikiClient {
           project: WikiProject.wikipedia,
           timeout: timeout,
           userAgent: userAgent,
+          retryPolicy: retryPolicy,
         ),
         httpClient: httpClient,
       );
@@ -90,7 +93,8 @@ class WikiClient {
     String language = 'en',
     Duration timeout = const Duration(seconds: 30),
     String userAgent =
-        'WikimediaDart/0.1.0-beta.1 (https://github.com/Zaidusyy/wikimedia_dart)',
+        'WikimediaDart/0.1.0 (https://github.com/Zaidusyy/wikimedia_dart)',
+    RetryPolicy retryPolicy = const RetryPolicy(),
     http.Client? httpClient,
   }) =>
       WikiClient._internal(
@@ -99,6 +103,7 @@ class WikiClient {
           project: WikiProject.wiktionary,
           timeout: timeout,
           userAgent: userAgent,
+          retryPolicy: retryPolicy,
         ),
         httpClient: httpClient,
       );
@@ -109,7 +114,8 @@ class WikiClient {
   factory WikiClient.commons({
     Duration timeout = const Duration(seconds: 30),
     String userAgent =
-        'WikimediaDart/0.1.0-beta.1 (https://github.com/Zaidusyy/wikimedia_dart)',
+        'WikimediaDart/0.1.0 (https://github.com/Zaidusyy/wikimedia_dart)',
+    RetryPolicy retryPolicy = const RetryPolicy(),
     http.Client? httpClient,
   }) =>
       WikiClient._internal(
@@ -118,6 +124,7 @@ class WikiClient {
           project: WikiProject.commons,
           timeout: timeout,
           userAgent: userAgent,
+          retryPolicy: retryPolicy,
         ),
         httpClient: httpClient,
       );
@@ -132,7 +139,8 @@ class WikiClient {
     String language = 'en',
     Duration timeout = const Duration(seconds: 30),
     String userAgent =
-        'WikimediaDart/0.1.0-beta.1 (https://github.com/Zaidusyy/wikimedia_dart)',
+        'WikimediaDart/0.1.0 (https://github.com/Zaidusyy/wikimedia_dart)',
+    RetryPolicy retryPolicy = const RetryPolicy(),
     http.Client? httpClient,
   }) =>
       WikiClient._internal(
@@ -142,6 +150,7 @@ class WikiClient {
           timeout: timeout,
           userAgent: userAgent,
           customBaseUrl: baseUrl,
+          retryPolicy: retryPolicy,
         ),
         httpClient: httpClient,
       );

@@ -1,12 +1,13 @@
-/// Wikimedia Dart — A type-safe Dart SDK for Wikimedia REST APIs.
+/// A type-safe Dart client for the Wikimedia REST APIs.
 ///
-/// Import this library to access all public Wikimedia Dart symbols:
+/// Import this one file to get everything public:
 ///
 /// ```dart
 /// import 'package:wikimedia_dart/wikimedia_dart.dart';
 /// ```
 library wikimedia_dart;
 
+export 'src/client/retry_policy.dart';
 export 'src/client/wiki_client.dart';
 export 'src/errors/wiki_exception.dart';
 export 'src/media/media_client.dart';

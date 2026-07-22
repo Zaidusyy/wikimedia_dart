@@ -1,24 +1,25 @@
 # Wikimedia Dart
 
-A production-ready, type-safe Dart SDK for the Wikimedia REST APIs.
+A type-safe Dart client for the Wikimedia REST APIs.
 
 ## Overview
 
-Wikimedia Dart provides a structured, type-safe client library to interact with the Wikimedia REST APIs. It is designed to work across multiple platforms (mobile, desktop, and web) with zero reliance on Flutter dependencies.
+Wikimedia Dart is a typed client for the Wikimedia REST APIs. It runs anywhere Dart does (mobile, desktop, web, server, CLI) and doesn't depend on Flutter.
 
-This SDK is not an official Wikimedia Foundation library. It is maintained independently.
+It's an independent project, not an official Wikimedia Foundation library.
 
-## Motivation
+## Why
 
-Integrating Wikipedia, Wiktionary, or Commons data into Dart or Flutter applications has historically relied on direct HTTP calls or web scraping. This SDK provides complete static typing, built-in exception mapping, predictable client resource lifecycle management, and transparent multi-project support.
+Pulling Wikipedia, Wiktionary, or Commons data into a Dart app usually means hand-rolling HTTP calls or scraping. This package gives you typed responses, a single exception hierarchy for errors, clear client lifecycle, and one client that can target several projects.
 
 ## Features
 
-- Fully typed endpoints for page summaries, raw HTML, related pages, search, autocomplete, and media access.
-- Built-in mapped exception hierarchy for predictable error handling (e.g. 404, 429, 500 mapping).
-- Multi-project support, including Wikipedia, Wiktionary, Commons, and custom MediaWiki instances.
-- Zero Flutter dependency; runs on standard Dart VMs, server-side, or CLI apps.
-- Comprehensive request timeouts, custom base-URL injection, and user-agent settings.
+- Typed endpoints for page summaries, raw HTML, related pages, search, autocomplete, and media.
+- One exception hierarchy that maps HTTP status codes (404, 429, 4xx, 5xx) to typed errors.
+- Automatic retry with backoff for transient failures.
+- Works with Wikipedia, Wiktionary, Commons, and self-hosted MediaWiki.
+- No Flutter dependency; runs on the plain Dart VM, servers, and CLIs.
+- Configurable timeouts, base URL, and User-Agent.
 
 ## Installation
 
@@ -26,7 +27,7 @@ Add `wikimedia_dart` to your `pubspec.yaml` dependencies:
 
 ```yaml
 dependencies:
-  wikimedia_dart: ^0.1.0-beta.1
+  wikimedia_dart: ^0.1.0
 ```
 
 Then run:
@@ -61,7 +62,7 @@ void main() async {
 To comply with the [Wikimedia User-Agent Policy](https://meta.wikimedia.org/wiki/User-Agent_policy), all applications accessing Wikimedia APIs must supply a clear, descriptive, and unique `User-Agent` header. This allows Wikimedia sysadmins to identify your application and contact you in case of excessive resource consumption, avoiding automated IP-based rate limiting or blocks.
 
 By default, `WikiClient` generates a generic User-Agent:
-`WikimediaDart/0.1.0-beta.1 (https://github.com/Zaidusyy/wikimedia_dart)`
+`WikimediaDart/0.1.0 (https://github.com/Zaidusyy/wikimedia_dart)`
 
 ### Customizing the User-Agent (Recommended)
 
@@ -88,10 +89,11 @@ final wiki = WikiClient.wikipedia();
 // Get the raw HTML content of an article
 final htmlContent = await wiki.pages.html('Earth');
 
-// Get related articles
-final relatedResponse = await wiki.pages.related('Earth');
-for (final page in relatedResponse) {
-  print('Related page: ${page.title}');
+// Get related articles ("more like this" search).
+// Returns List<SearchResultItem>.
+final relatedPages = await wiki.pages.related('Earth', limit: 5);
+for (final page in relatedPages) {
+  print('Related page: ${page.title} (${page.description})');
 }
 ```
 
@@ -144,15 +146,54 @@ final frenchSummary = await wiki.pages.summary('Terre', language: 'fr');
 final germanSummary = await wiki.pages.summary('Erde', language: 'de');
 ```
 
+## Retries and Resilience
+
+Wikimedia Dart automatically retries transient failures with exponential
+backoff. Because every request is an idempotent `GET`, retrying is safe. The
+following failures are retried:
+
+- `WikiRateLimitException` (HTTP 429)
+- `WikiServerException` with a 5xx status code (502/503/504, etc.)
+- `WikiNetworkException` (socket / DNS / connection failures)
+- `WikiTimeoutException` (request exceeded the configured timeout)
+
+Non-transient failures are never retried: 404, parse errors, and 4xx responses
+other than 429. When the server sends a `Retry-After` header (on a 429 or 503),
+that value is used, capped at `maxBackoff`.
+
+Retries are **enabled by default** (3 retries; 500ms, 1s, 2s backoff). Tune
+or disable them via `RetryPolicy`:
+
+```dart
+// Custom policy: 5 retries, faster initial backoff.
+final wiki = WikiClient.wikipedia(
+  retryPolicy: const RetryPolicy(
+    maxRetries: 5,
+    initialBackoff: Duration(milliseconds: 200),
+    maxBackoff: Duration(seconds: 20),
+  ),
+);
+
+// Disable retries entirely.
+final noRetry = WikiClient.wikipedia(
+  retryPolicy: const RetryPolicy.none(),
+);
+```
+
+If every retry is exhausted, the final failure is thrown as the corresponding
+`WikiException`, so existing error handling continues to work unchanged.
+
 ## Error Handling
 
-Wikimedia Dart translates raw HTTP response statuses into a structured exception hierarchy:
+Every HTTP status maps to a typed exception:
 
-- `WikiNotFoundException` — Status code 404 (resource does not exist).
-- `WikiRateLimitException` — Status code 429 (rate limits exceeded; includes `retryAfter` duration if provided by the API).
-- `WikiServerException` — Status code 5xx (Wikimedia server errors).
-- `WikiNetworkException` — Underlying socket connection, DNS, or network transport issues.
-- `WikiParseException` — Structural formatting issues with response JSON deserialization.
+- `WikiNotFoundException`: 404, the resource doesn't exist.
+- `WikiRateLimitException`: 429, rate limit hit. Carries `retryAfter` when the API sends it.
+- `WikiRequestException`: a 4xx other than 404/429 (400, 401, 403, ...); the request itself was rejected.
+- `WikiServerException`: 5xx server error. Carries `retryAfter` when the server sends it.
+- `WikiNetworkException`: socket, DNS, or connection failure.
+- `WikiTimeoutException`: the request ran past the configured timeout.
+- `WikiParseException`: the response didn't match the expected shape.
 
 ```dart
 try {
@@ -168,35 +209,28 @@ try {
 
 ## Supported Wikimedia Projects
 
-Initialize constructors are available for:
+Named constructors cover the common cases:
 
-- `WikiClient.wikipedia()` — Wikipedia instances (supports BCP 47 language prefixing).
-- `WikiClient.wiktionary()` — Wiktionary instances (supports BCP 47 language prefixing).
-- `WikiClient.commons()` — Wikimedia Commons (does not use language prefixes).
-- `WikiClient.custom(baseUrl: 'https://wiki.example.org')` — Custom MediaWiki REST API integrations.
+- `WikiClient.wikipedia()`: Wikipedia, with a BCP 47 language.
+- `WikiClient.wiktionary()`: Wiktionary, with a BCP 47 language.
+- `WikiClient.commons()`: Wikimedia Commons (no language prefix).
+- `WikiClient.custom(baseUrl: 'https://wiki.example.org')`: any self-hosted MediaWiki.
 
 ## Known Limitations
 
-- **Wiktionary Summary Endpoint**: Wikimedia's REST API does not support the `/page/summary/{title}` endpoint for Wiktionary projects. Consequently, calling `wiki.pages.summary()` on a Wiktionary-configured client will throw a `WikiNotFoundException` (HTTP 404). This is an upstream API limitation. Callers targeting Wiktionary should use the `pages.html()` or `search` endpoints instead, which are fully supported.
+Wikimedia's REST API doesn't expose `/page/summary/{title}` for Wiktionary, so `wiki.pages.summary()` on a Wiktionary client returns a 404 (`WikiNotFoundException`). It's an upstream gap; use `pages.html()` or `search` for Wiktionary instead.
 
-## Quality Guarantees
+## Design notes
 
-- **Test Suite**: 100% test coverage across all namespaces.
-- **Contract Mocks**: Isolated unit testing against captured Wikimedia REST API shapes.
-- **Static Analysis**: Enforced strict-casts, strict-inference, and zero warnings.
-
-## Architecture Principles
-
-- **Separation of Concerns**: Endpoint routing logic is encapsulated in `UrlBuilder`. JSON deserialization logic resides in model classes. Service layers manage raw networking via `ServiceBase`.
-- **Client Ownership**: The client handles connection pooling via its underlying `http.Client`. Callers are responsible for calling `close()` when the client is no longer needed.
-- **No Side Effects**: Methods are read-only and execute no mutations on user accounts or Wikimedia states.
+Requests are read-only, so nothing here changes accounts or wiki content. URL construction lives in `UrlBuilder`, JSON parsing lives in the model classes, and the networking (headers, timeout, retries, error mapping) lives in `ServiceBase`. A client owns one `http.Client` and its connection pool, so call `close()` when you're done with it.
 
 ## Contributing
 
-Contributions are welcome. Please ensure that:
-1. All changes compile cleanly under `dart analyze --fatal-infos`.
-2. New features or fixes are covered by unit and integration tests.
-3. Code is formatted using `dart format .`.
+Contributions are welcome. Before opening a PR, please check that:
+
+1. `dart analyze --fatal-infos` is clean.
+2. New behavior has unit tests (and integration tests where it makes sense).
+3. `dart format .` has been run.
 
 ## License
 

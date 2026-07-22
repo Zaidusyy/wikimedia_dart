@@ -1,24 +1,20 @@
-/// REST API path constants for the Wikimedia REST v1 API.
+/// REST paths for the Wikimedia API.
 ///
-/// All paths must begin with a `/` and are appended after `/api/rest_v1`
-/// by [UrlBuilder]. Verify each path against the live API documentation:
-/// https://www.mediawiki.org/wiki/Wikimedia_REST_API
+/// Each starts with `/` and is joined onto the base path by [UrlBuilder].
+/// Reference: https://www.mediawiki.org/wiki/Wikimedia_REST_API
 abstract final class Endpoints {
-  /// `GET /page/summary/{title}` — Article summary with extract and thumbnail.
+  /// `GET /page/summary/{title}`: summary with extract and thumbnail.
   static const String pageSummary = '/page/summary';
 
-  /// `GET /page/html/{title}` — Full HTML content of an article.
+  /// `GET /page/html/{title}`: full article HTML.
   static const String pageHtml = '/page/html';
 
-  /// `GET /page/related/{title}` — Articles related to a given article.
-  static const String pageRelated = '/page/related';
-
-  /// `GET /page/media-list/{title}` — All media embedded in an article.
+  /// `GET /page/media-list/{title}`: media embedded in an article.
   static const String pageMediaList = '/page/media-list';
 
-  /// `GET /search/page` — Full-text search across the project.
+  /// `GET /search/page`: full-text search.
   static const String pageSearch = '/search/page';
 
-  /// `GET /search/title` — Title prefix / autocomplete search.
+  /// `GET /search/title`: title prefix / autocomplete search.
   static const String pageTitle = '/search/title';
 }

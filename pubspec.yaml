@@ -1,11 +1,16 @@
 name: wikimedia_dart
 description: >-
-  Production-ready, type-safe Dart SDK for Wikimedia REST APIs.
-  Supports Wikipedia, Wiktionary, Commons, and other Wikimedia projects.
-version: 0.1.0-beta.1
+  A type-safe Dart client for the Wikimedia REST APIs, covering Wikipedia,
+  Wiktionary, Commons, and other Wikimedia projects.
+version: 0.1.0
 homepage: https://github.com/Zaidusyy/wikimedia_dart
 repository: https://github.com/Zaidusyy/wikimedia_dart
 issue_tracker: https://github.com/Zaidusyy/wikimedia_dart/issues
+topics:
+  - wikipedia
+  - wikimedia
+  - mediawiki
+  - rest-api
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

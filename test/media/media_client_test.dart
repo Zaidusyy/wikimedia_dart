@@ -85,7 +85,10 @@ void main() {
         return http.Response('Server Error', 500);
       });
 
-      final wiki = WikiClient.wikipedia(httpClient: mock);
+      final wiki = WikiClient.wikipedia(
+        httpClient: mock,
+        retryPolicy: const RetryPolicy.none(),
+      );
       expect(
         () => wiki.media.listForPage('Earth'),
         throwsA(isA<WikiServerException>()),
@@ -144,7 +147,10 @@ void main() {
         return http.Response('Server Error', 500);
       });
 
-      final wiki = WikiClient.wikipedia(httpClient: mock);
+      final wiki = WikiClient.wikipedia(
+        httpClient: mock,
+        retryPolicy: const RetryPolicy.none(),
+      );
       expect(
         () => wiki.media.getFile('File:Earth.jpg'),
         throwsA(isA<WikiServerException>()),

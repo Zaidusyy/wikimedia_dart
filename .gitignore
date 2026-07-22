@@ -8,3 +8,7 @@ pubspec.lock
 
 # Test coverage reports
 coverage/
+
+# Local-only working files and environment
+.local/
+.env

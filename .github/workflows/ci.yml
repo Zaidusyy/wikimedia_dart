@@ -5,6 +5,10 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
+  schedule:
+    # Nightly at 04:17 UTC — catches upstream Wikimedia API contract drift.
+    - cron: "17 4 * * *"
+  workflow_dispatch:
 
 jobs:
   test:
@@ -52,4 +56,27 @@ jobs:
         with:
           file: coverage/lcov.info
           fail_ci_if_error: false
+
+  # Live integration tests against the real Wikimedia API. These are skipped
+  # in the unit suite above (see dart_test.yaml) and run only on the nightly
+  # schedule or a manual dispatch, so upstream contract drift is caught
+  # without flaking pull-request CI.
+  integration:
+    name: Live integration tests
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Run integration tests
+        run: dart test --run-skipped --tags integration
 

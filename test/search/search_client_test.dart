@@ -54,7 +54,10 @@ void main() {
         return http.Response('Server Error', 500);
       });
 
-      final wiki = WikiClient.wikipedia(httpClient: mock);
+      final wiki = WikiClient.wikipedia(
+        httpClient: mock,
+        retryPolicy: const RetryPolicy.none(),
+      );
       expect(
         () => wiki.search.pages('climate change'),
         throwsA(isA<WikiServerException>()),
@@ -104,7 +107,10 @@ void main() {
         return http.Response('Server Error', 500);
       });
 
-      final wiki = WikiClient.wikipedia(httpClient: mock);
+      final wiki = WikiClient.wikipedia(
+        httpClient: mock,
+        retryPolicy: const RetryPolicy.none(),
+      );
       expect(
         () => wiki.search.autocomplete('Ear'),
         throwsA(isA<WikiServerException>()),
