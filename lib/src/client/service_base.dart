@@ -64,7 +64,7 @@ mixin ServiceBase {
               uri: uri,
             ),
           );
-      return handleResponse(response, parser);
+      return await handleResponse(response, parser);
     } on WikiException {
       // Already one of ours; let it through untouched.
       rethrow;
