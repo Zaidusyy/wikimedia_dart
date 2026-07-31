@@ -1,5 +1,10 @@
 # Wikimedia Dart
 
+[![pub package](https://img.shields.io/pub/v/wikimedia_dart.svg)](https://pub.dev/packages/wikimedia_dart)
+[![CI](https://github.com/Zaidusyy/wikimedia_dart/actions/workflows/ci.yml/badge.svg)](https://github.com/Zaidusyy/wikimedia_dart/actions/workflows/ci.yml)
+[![pub points](https://img.shields.io/pub/points/wikimedia_dart)](https://pub.dev/packages/wikimedia_dart/score)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A type-safe Dart client for the Wikimedia REST APIs.
 
 ## Overview
