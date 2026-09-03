@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-09-03
+
+Analysis-only release. No API or behavior changes.
+
+### Fixed
+
+- The `unawaited_return_in_try_block` warning in `ServiceBase._getOnce`, which
+  cost the package 20 pub points on the published 0.1.0. `dart analyze` is
+  clean again.
+
 ## [0.1.0] - 2026-07-23
 
 First stable release. Drops the `beta` tag and adds automatic retries, clearer
