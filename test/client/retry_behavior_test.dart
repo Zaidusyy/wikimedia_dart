@@ -168,5 +168,26 @@ void main() {
       expect(calls, 2);
       expect(html, contains('Earth'));
     });
+
+    test('close() during a backoff stops the retries', () async {
+      var calls = 0;
+      final mock = MockClient((request) async {
+        calls++;
+        return http.Response('unavailable', 503);
+      });
+
+      final wiki = WikiClient.wikipedia(
+        httpClient: mock,
+        retryPolicy: const RetryPolicy(
+          initialBackoff: Duration(milliseconds: 100),
+        ),
+      );
+      final call = wiki.pages.summary('Earth');
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      wiki.close();
+
+      await expectLater(call, throwsA(isA<WikiServerException>()));
+      expect(calls, 1, reason: 'nothing is sent after close()');
+    });
   });
 }

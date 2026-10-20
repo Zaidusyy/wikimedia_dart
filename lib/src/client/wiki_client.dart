@@ -187,7 +187,8 @@ class WikiClient {
   /// Closes this client and releases all resources.
   ///
   /// After calling [close], any attempt to use a service method will
-  /// throw a [StateError].
+  /// throw a [StateError]. A call already in progress stops retrying and
+  /// fails with its last error.
   ///
   /// If an [http.Client] was supplied at construction the caller retains
   /// ownership and is responsible for closing it. Wikimedia Dart will only

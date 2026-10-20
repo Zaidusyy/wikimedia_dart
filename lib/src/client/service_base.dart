@@ -114,6 +114,9 @@ mixin ServiceBase {
 
   /// Executes [attempt], retrying transient failures per the configured
   /// [RetryPolicy]. The last failure is rethrown once retries are exhausted.
+  ///
+  /// A client closed mid-call stops retrying and rethrows the last failure,
+  /// so nothing is sent after [WikiClient.close].
   Future<T> _withRetry<T>(Uri uri, Future<T> Function() attempt) async {
     final policy = config.retryPolicy;
     var retries = 0;
@@ -121,9 +124,12 @@ mixin ServiceBase {
       try {
         return await attempt();
       } on WikiException catch (e) {
-        if (retries >= policy.maxRetries || !isRetryable(e)) rethrow;
+        if (isClosed || retries >= policy.maxRetries || !isRetryable(e)) {
+          rethrow;
+        }
         final backoff = policy.backoffFor(retries, retryAfter: retryAfterOf(e));
         await Future<void>.delayed(backoff);
+        if (isClosed) rethrow;
         retries++;
       }
     }
