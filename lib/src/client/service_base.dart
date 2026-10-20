@@ -157,7 +157,7 @@ mixin ServiceBase {
     final statusCode = response.statusCode;
 
     return switch (statusCode) {
-      200 => parse(response.body, parser),
+      200 => parse(_utf8Body(response), parser),
       404 => throw WikiNotFoundException(
           message: 'Resource not found at URL: ${url ?? "unknown"}',
           statusCode: 404,
@@ -225,6 +225,23 @@ mixin ServiceBase {
           statusCode: statusCode,
         ),
     };
+  }
+
+  /// The body of a JSON response as text.
+  ///
+  /// JSON is always UTF-8, but the core REST endpoints (search, title search)
+  /// send `application/json` with no charset, and http releases before 1.4.0
+  /// decode that as latin1. Decoding the bytes ourselves keeps non-ASCII text
+  /// intact on every http version this package allows.
+  String _utf8Body(http.Response response) {
+    try {
+      return utf8.decode(response.bodyBytes);
+    } on FormatException catch (e) {
+      throw WikiParseException(
+        message: 'Response is not valid UTF-8: ${e.message}',
+        cause: e,
+      );
+    }
   }
 
   /// Decodes JSON and applies [parser], wrapping failures in

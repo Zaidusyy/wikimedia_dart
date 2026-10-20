@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:test/test.dart';
@@ -129,6 +131,48 @@ void main() {
       expect(
         () => wiki.search.autocomplete('Ear'),
         throwsStateError,
+      );
+    });
+
+    // The live search endpoints send `application/json` without a charset.
+    // Response.bytes keeps the body as real UTF-8 on the wire.
+    group('decodes non-ASCII text as UTF-8', () {
+      const body = '{"pages":[{"id":1,"key":"पृथ्वी","title":"पृथ्वी",'
+          '"description":"Café, 東京"}]}';
+
+      for (final headers in [
+        {'content-type': 'application/json'},
+        <String, String>{},
+      ]) {
+        test('with headers $headers', () async {
+          final mock = MockClient(
+            (request) async => http.Response.bytes(
+              utf8.encode(body),
+              200,
+              headers: headers,
+            ),
+          );
+          final wiki = WikiClient.wikipedia(httpClient: mock);
+
+          final result = await wiki.search.pages('earth');
+          expect(result.pages.single.title, 'पृथ्वी');
+          expect(result.pages.single.description, 'Café, 東京');
+
+          final titles = await wiki.search.autocomplete('earth');
+          expect(titles, ['पृथ्वी']);
+        });
+      }
+    });
+
+    test('invalid UTF-8 surfaces as WikiParseException', () async {
+      final mock = MockClient(
+        (request) async => http.Response.bytes([0x7b, 0xff, 0x7d], 200),
+      );
+      final wiki = WikiClient.wikipedia(httpClient: mock);
+
+      expect(
+        () => wiki.search.pages('earth'),
+        throwsA(isA<WikiParseException>()),
       );
     });
   });
