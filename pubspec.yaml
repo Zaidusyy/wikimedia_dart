@@ -2,7 +2,7 @@ name: wikimedia_dart
 description: >-
   A type-safe Dart client for the Wikimedia REST APIs, covering Wikipedia,
   Wiktionary, Commons, and other Wikimedia projects.
-version: 0.1.1
+version: 0.1.2
 homepage: https://github.com/Zaidusyy/wikimedia_dart
 repository: https://github.com/Zaidusyy/wikimedia_dart
 issue_tracker: https://github.com/Zaidusyy/wikimedia_dart/issues

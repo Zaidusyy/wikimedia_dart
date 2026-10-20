@@ -3,7 +3,7 @@
 /// Only used to build [defaultUserAgent]. A test asserts this matches the
 /// `version:` field in `pubspec.yaml`, so a release bump can't silently leave
 /// the User-Agent behind.
-const String packageVersion = '0.1.1';
+const String packageVersion = '0.1.2';
 
 /// The `User-Agent` sent when the caller doesn't supply one.
 ///
