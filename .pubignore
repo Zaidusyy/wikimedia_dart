@@ -8,10 +8,6 @@ pubspec.lock
 # Test coverage output
 coverage/
 
-# Repository-only documentation
-doc/release_checklist.md
-doc/real_world_validation.md
-
 # Local working files and environment (already gitignored; listed here because
 # this file replaces .gitignore for publishing)
 .local/
