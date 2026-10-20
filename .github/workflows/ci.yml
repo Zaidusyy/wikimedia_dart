@@ -50,17 +50,15 @@ jobs:
         if: matrix.sdk == 'beta'
         run: dart analyze
 
+      # The live tests are skipped here anyway, and coverage 1.16 rejects the
+      # empty report a skipped file leaves behind.
       - name: Run tests
-        run: dart test --coverage=coverage
-
-      - name: Activate coverage tool
-        if: matrix.sdk == 'stable'
-        run: dart pub global activate coverage
+        run: dart test --coverage=coverage --exclude-tags integration
 
       - name: Format coverage
         if: matrix.sdk == 'stable'
         run: |
-          dart pub global run coverage:format_coverage \
+          dart run coverage:format_coverage \
             --lcov \
             --in=coverage \
             --out=coverage/lcov.info \
