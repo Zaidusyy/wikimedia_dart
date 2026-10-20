@@ -32,6 +32,15 @@ class WikiThumbnail {
     );
   }
 
+  /// Serialises this thumbnail back to the API's JSON shape.
+  ///
+  /// Round-trips through [WikiThumbnail.fromJson].
+  Map<String, dynamic> toJson() => {
+        'source': source,
+        'width': width,
+        'height': height,
+      };
+
   /// Returns a copy of this thumbnail with the given fields replaced.
   WikiThumbnail copyWith({
     String? source,

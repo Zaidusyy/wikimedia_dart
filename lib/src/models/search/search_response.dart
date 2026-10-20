@@ -29,6 +29,14 @@ class SearchResponse {
         nextCursor: json['next'] as String?,
       );
 
+  /// Serialises this response back to the API's JSON shape.
+  ///
+  /// Round-trips through [SearchResponse.fromJson].
+  Map<String, dynamic> toJson() => {
+        'pages': pages.map((p) => p.toJson()).toList(),
+        if (nextCursor != null) 'next': nextCursor,
+      };
+
   /// Returns a copy of this [SearchResponse] with the given fields replaced.
   SearchResponse copyWith({
     List<SearchResultItem>? pages,
@@ -44,11 +52,27 @@ class SearchResponse {
       identical(this, other) ||
       other is SearchResponse &&
           runtimeType == other.runtimeType &&
-          pages == other.pages &&
+          _pagesEqual(pages, other.pages) &&
           nextCursor == other.nextCursor;
 
   @override
-  int get hashCode => Object.hash(pages, nextCursor);
+  int get hashCode => Object.hash(Object.hashAll(pages), nextCursor);
+
+  /// Compares [pages] element by element.
+  ///
+  /// `List` uses identity equality, so two responses carrying equal items in
+  /// separate lists would otherwise compare unequal.
+  static bool _pagesEqual(
+    List<SearchResultItem> a,
+    List<SearchResultItem> b,
+  ) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
 
   @override
   String toString() =>

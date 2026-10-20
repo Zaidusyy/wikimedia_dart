@@ -43,6 +43,19 @@ class SearchResultItem {
             : null,
       );
 
+  /// Serialises this result back to the API's JSON shape.
+  ///
+  /// Round-trips through [SearchResultItem.fromJson]. Null fields are
+  /// omitted. The page id is written as `id`, the key the search endpoint
+  /// uses.
+  Map<String, dynamic> toJson() => {
+        'title': title,
+        'id': pageId,
+        if (description != null) 'description': description,
+        if (excerpt != null) 'excerpt': excerpt,
+        if (thumbnail != null) 'thumbnail': thumbnail!.toJson(),
+      };
+
   /// Returns a copy of this [SearchResultItem] with the given fields replaced.
   SearchResultItem copyWith({
     String? title,

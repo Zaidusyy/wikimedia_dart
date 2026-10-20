@@ -80,6 +80,24 @@ class PageSummary {
             : null,
       );
 
+  /// Serialises this summary back to the API's JSON shape.
+  ///
+  /// Round-trips through [PageSummary.fromJson]. Null fields are omitted
+  /// rather than written as `null`, so a cached map stays compact.
+  Map<String, dynamic> toJson() => {
+        'title': title,
+        'displaytitle': displayTitle,
+        'pageid': pageId,
+        'lang': language,
+        if (description != null) 'description': description,
+        if (extract != null) 'extract': extract,
+        if (extractHtml != null) 'extract_html': extractHtml,
+        if (thumbnail != null) 'thumbnail': thumbnail!.toJson(),
+        if (contentUrls != null) 'content_urls': contentUrls!.toJson(),
+        if (wikidataId != null) 'wikibase_item': wikidataId,
+        if (lastModified != null) 'timestamp': lastModified!.toIso8601String(),
+      };
+
   /// Returns a copy of this [PageSummary] with the given fields replaced.
   PageSummary copyWith({
     String? title,

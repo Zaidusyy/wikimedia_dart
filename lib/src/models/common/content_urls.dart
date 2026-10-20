@@ -30,6 +30,14 @@ class ContentUrls {
         mobileUrl: (json['mobile'] as Map<String, dynamic>)['page'] as String,
       );
 
+  /// Serialises this back to the API's nested `content_urls` shape.
+  ///
+  /// Round-trips through [ContentUrls.fromJson].
+  Map<String, dynamic> toJson() => {
+        'desktop': {'page': desktopUrl},
+        'mobile': {'page': mobileUrl},
+      };
+
   /// Returns a copy of this [ContentUrls] with the given fields replaced.
   ContentUrls copyWith({
     String? desktopUrl,

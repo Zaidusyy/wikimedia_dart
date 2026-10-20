@@ -57,6 +57,22 @@ class MediaFile {
     );
   }
 
+  /// Serialises this file back to the API's JSON shape.
+  ///
+  /// Round-trips through [MediaFile.fromJson]. Source URL and dimensions go
+  /// under `originalimage`, where `fromJson` reads them.
+  Map<String, dynamic> toJson() => {
+        'title': title,
+        'originalimage': {
+          'source': sourceUrl,
+          if (width != null) 'width': width,
+          if (height != null) 'height': height,
+        },
+        if (description != null) 'description': description,
+        if (mimeType != null) 'type': mimeType,
+        if (fileSizeBytes != null) 'file_size': fileSizeBytes,
+      };
+
   /// Returns a copy of this [MediaFile] with the given fields replaced.
   MediaFile copyWith({
     String? title,

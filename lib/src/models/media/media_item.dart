@@ -60,6 +60,17 @@ class MediaItem {
     );
   }
 
+  /// Serialises this item back to the API's JSON shape.
+  ///
+  /// Round-trips through [MediaItem.fromJson]. The source URL is written
+  /// under `original`, the first place `fromJson` looks for it.
+  Map<String, dynamic> toJson() => {
+        'title': title,
+        'type': type,
+        if (srcUrl != null) 'original': {'source': srcUrl},
+        if (caption != null) 'caption': caption,
+      };
+
   /// Returns a copy of this [MediaItem] with the given fields replaced.
   MediaItem copyWith({
     String? title,
