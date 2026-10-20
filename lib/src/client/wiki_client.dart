@@ -1,5 +1,6 @@
 import 'package:http/http.dart' as http;
 
+import '../constants/version.dart';
 import '../media/media_client.dart';
 import '../models/common/wiki_project.dart';
 import '../pages/pages_client.dart';
@@ -38,8 +39,7 @@ class WikiClient {
     String language = 'en',
     WikiProject project = WikiProject.wikipedia,
     Duration timeout = const Duration(seconds: 30),
-    String userAgent =
-        'WikimediaDart/0.1.0 (https://github.com/Zaidusyy/wikimedia_dart)',
+    String userAgent = defaultUserAgent,
     String? customBaseUrl,
     RetryPolicy retryPolicy = const RetryPolicy(),
     http.Client? httpClient,
@@ -72,8 +72,7 @@ class WikiClient {
   factory WikiClient.wikipedia({
     String language = 'en',
     Duration timeout = const Duration(seconds: 30),
-    String userAgent =
-        'WikimediaDart/0.1.0 (https://github.com/Zaidusyy/wikimedia_dart)',
+    String userAgent = defaultUserAgent,
     RetryPolicy retryPolicy = const RetryPolicy(),
     http.Client? httpClient,
   }) =>
@@ -92,8 +91,7 @@ class WikiClient {
   factory WikiClient.wiktionary({
     String language = 'en',
     Duration timeout = const Duration(seconds: 30),
-    String userAgent =
-        'WikimediaDart/0.1.0 (https://github.com/Zaidusyy/wikimedia_dart)',
+    String userAgent = defaultUserAgent,
     RetryPolicy retryPolicy = const RetryPolicy(),
     http.Client? httpClient,
   }) =>
@@ -113,8 +111,7 @@ class WikiClient {
   /// Commons does not use a language prefix.
   factory WikiClient.commons({
     Duration timeout = const Duration(seconds: 30),
-    String userAgent =
-        'WikimediaDart/0.1.0 (https://github.com/Zaidusyy/wikimedia_dart)',
+    String userAgent = defaultUserAgent,
     RetryPolicy retryPolicy = const RetryPolicy(),
     http.Client? httpClient,
   }) =>
@@ -138,8 +135,7 @@ class WikiClient {
     required String baseUrl,
     String language = 'en',
     Duration timeout = const Duration(seconds: 30),
-    String userAgent =
-        'WikimediaDart/0.1.0 (https://github.com/Zaidusyy/wikimedia_dart)',
+    String userAgent = defaultUserAgent,
     RetryPolicy retryPolicy = const RetryPolicy(),
     http.Client? httpClient,
   }) =>
