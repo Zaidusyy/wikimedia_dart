@@ -13,13 +13,16 @@ class WikiThumbnail {
   /// Full URL to the thumbnail image.
   final String source;
 
-  /// Width of the thumbnail in pixels.
+  /// Width of the thumbnail in pixels, or 0 if the API didn't say.
   final int width;
 
-  /// Height of the thumbnail in pixels.
+  /// Height of the thumbnail in pixels, or 0 if the API didn't say.
   final int height;
 
   /// Deserialises a [WikiThumbnail] from a JSON map.
+  ///
+  /// The search endpoints may send null dimensions; those become 0 rather
+  /// than failing the whole response.
   factory WikiThumbnail.fromJson(Map<String, dynamic> json) {
     var sourceUrl = (json['source'] ?? json['url'] ?? '') as String;
     if (sourceUrl.startsWith('//')) {
@@ -27,8 +30,8 @@ class WikiThumbnail {
     }
     return WikiThumbnail(
       source: sourceUrl,
-      width: json['width'] as int,
-      height: json['height'] as int,
+      width: (json['width'] as num?)?.toInt() ?? 0,
+      height: (json['height'] as num?)?.toInt() ?? 0,
     );
   }
 

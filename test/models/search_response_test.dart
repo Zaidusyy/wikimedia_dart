@@ -75,6 +75,30 @@ void main() {
       expect(item.thumbnail!.width, 100);
     });
 
+    // The search spec allows null dimensions; one such hit used to fail the
+    // whole search.
+    test('fromJson accepts a thumbnail without dimensions', () {
+      final response = SearchResponse.fromJson({
+        'pages': [
+          {
+            'id': 1,
+            'title': 'Earth',
+            'thumbnail': {
+              'mimetype': 'audio/ogg',
+              'width': null,
+              'height': null,
+              'duration': 12.5,
+              'url': '//upload.wikimedia.org/earth.ogg',
+            },
+          },
+        ],
+      });
+      final thumbnail = response.pages.single.thumbnail!;
+      expect(thumbnail.width, 0);
+      expect(thumbnail.height, 0);
+      expect(thumbnail.source, 'https://upload.wikimedia.org/earth.ogg');
+    });
+
     test('equality and hashCode', () {
       final a = SearchResultItem.fromJson({
         'title': 'Earth',
