@@ -8,7 +8,11 @@ pubspec.lock
 # Test coverage output
 coverage/
 
-# Repository design documentation
-wikimedia_dart-v0.1-architecture.md
+# Repository-only documentation
 doc/release_checklist.md
 doc/real_world_validation.md
+
+# Local working files and environment (already gitignored; listed here because
+# this file replaces .gitignore for publishing)
+.local/
+.env

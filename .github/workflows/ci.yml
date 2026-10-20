@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: ["main"]
   schedule:
-    # Nightly at 04:17 UTC — catches upstream Wikimedia API contract drift.
+    # Nightly at 04:17 UTC, to catch upstream Wikimedia API contract drift.
     - cron: "17 4 * * *"
   workflow_dispatch:
 
