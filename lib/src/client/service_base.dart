@@ -60,7 +60,7 @@ mixin ServiceBase {
           .timeout(
             config.timeout,
             onTimeout: () => throw WikiTimeoutException(
-              message: 'Request timed out after ${config.timeout.inSeconds}s',
+              message: 'Request timed out after ${_describe(config.timeout)}',
               uri: uri,
             ),
           );
@@ -90,7 +90,7 @@ mixin ServiceBase {
           .timeout(
             config.timeout,
             onTimeout: () => throw WikiTimeoutException(
-              message: 'Request timed out after ${config.timeout.inSeconds}s',
+              message: 'Request timed out after ${_describe(config.timeout)}',
               uri: uri,
             ),
           );
@@ -165,7 +165,8 @@ mixin ServiceBase {
     return switch (statusCode) {
       200 => parse(_utf8Body(response), parser),
       404 => throw WikiNotFoundException(
-          message: 'Resource not found at URL: ${url ?? "unknown"}',
+          message: 'Resource not found at URL: ${url ?? "unknown"}'
+              '${_reason(response)}',
           statusCode: 404,
           uri: url,
         ),
@@ -174,22 +175,25 @@ mixin ServiceBase {
           final seconds = retryAfter?.inSeconds;
           final suffix = seconds != null ? ' (retry after ${seconds}s)' : '';
           throw WikiRateLimitException(
-            message: 'Rate limit exceeded$suffix',
+            message: 'Rate limit exceeded$suffix${_reason(response)}',
             retryAfter: retryAfter,
           );
         }(),
       >= 500 => throw WikiServerException(
-          message: 'Server error $statusCode at URL: ${url ?? "unknown"}',
+          message: 'Server error $statusCode at URL: ${url ?? "unknown"}'
+              '${_reason(response)}',
           statusCode: statusCode,
           retryAfter: parseRetryAfter(response),
         ),
       >= 400 => throw WikiRequestException(
-          message: 'Request rejected ($statusCode) at URL: ${url ?? "unknown"}',
+          message: 'Request rejected ($statusCode) at URL: ${url ?? "unknown"}'
+              '${_reason(response)}',
           statusCode: statusCode,
         ),
       _ => throw WikiServerException(
           message:
-              'Unexpected status code: $statusCode at URL: ${url ?? "unknown"}',
+              'Unexpected status code: $statusCode at URL: ${url ?? "unknown"}'
+              '${_reason(response)}',
           statusCode: statusCode,
         ),
     };
@@ -203,7 +207,8 @@ mixin ServiceBase {
     return switch (statusCode) {
       200 => response.body,
       404 => throw WikiNotFoundException(
-          message: 'Resource not found at URL: ${url ?? "unknown"}',
+          message: 'Resource not found at URL: ${url ?? "unknown"}'
+              '${_reason(response)}',
           statusCode: 404,
           uri: url,
         ),
@@ -212,22 +217,25 @@ mixin ServiceBase {
           final seconds = retryAfter?.inSeconds;
           final suffix = seconds != null ? ' (retry after ${seconds}s)' : '';
           throw WikiRateLimitException(
-            message: 'Rate limit exceeded$suffix',
+            message: 'Rate limit exceeded$suffix${_reason(response)}',
             retryAfter: retryAfter,
           );
         }(),
       >= 500 => throw WikiServerException(
-          message: 'Server error $statusCode at URL: ${url ?? "unknown"}',
+          message: 'Server error $statusCode at URL: ${url ?? "unknown"}'
+              '${_reason(response)}',
           statusCode: statusCode,
           retryAfter: parseRetryAfter(response),
         ),
       >= 400 => throw WikiRequestException(
-          message: 'Request rejected ($statusCode) at URL: ${url ?? "unknown"}',
+          message: 'Request rejected ($statusCode) at URL: ${url ?? "unknown"}'
+              '${_reason(response)}',
           statusCode: statusCode,
         ),
       _ => throw WikiServerException(
           message:
-              'Unexpected status code: $statusCode at URL: ${url ?? "unknown"}',
+              'Unexpected status code: $statusCode at URL: ${url ?? "unknown"}'
+              '${_reason(response)}',
           statusCode: statusCode,
         ),
     };
@@ -273,4 +281,44 @@ mixin ServiceBase {
     final seconds = int.tryParse(value);
     return seconds != null ? Duration(seconds: seconds) : null;
   }
+}
+
+/// [d] in whole seconds when it is a whole number of them, otherwise in
+/// milliseconds, so a 1500ms timeout isn't reported as 1s.
+String _describe(Duration d) =>
+    d.inMilliseconds % 1000 == 0 ? '${d.inSeconds}s' : '${d.inMilliseconds}ms';
+
+/// The server's explanation from an error response, formatted as a message
+/// suffix, or '' when the body has nothing useful (empty, or an HTML page).
+///
+/// MediaWiki's REST errors carry the reason as JSON (`messageTranslations`,
+/// `message`, or RESTBase's `detail`/`title`); Wikimedia's edge sends some
+/// rejections, such as a missing User-Agent, as plain text.
+String _reason(http.Response response) {
+  final text = utf8.decode(response.bodyBytes, allowMalformed: true).trim();
+  String? reason;
+  if (text.startsWith('{')) {
+    try {
+      final json = jsonDecode(text);
+      if (json is Map<String, dynamic>) {
+        final translations = json['messageTranslations'];
+        final candidates = [
+          if (translations is Map) translations['en'],
+          json['message'],
+          json['detail'],
+          json['title'],
+        ].whereType<String>();
+        if (candidates.isNotEmpty) reason = candidates.first;
+      }
+    } on FormatException {
+      // Not JSON after all; nothing reliable to show.
+    }
+  } else if (!text.startsWith('<')) {
+    reason = text;
+  }
+  if (reason == null) return '';
+  reason = reason.replaceAll(RegExp(r'\s+'), ' ').trim();
+  if (reason.isEmpty) return '';
+  if (reason.length > 200) reason = '${reason.substring(0, 200)}...';
+  return ' (server said: $reason)';
 }

@@ -139,7 +139,93 @@ void main() {
     });
   });
 
-  group('Exception messages runtime context', () {
+  group('exception messages', () {
+    test('include the reason from a JSON error body', () async {
+      final mock = MockClient((request) async {
+        return http.Response(
+          '{"errorKey":"parameter-validation-failed",'
+          '"messageTranslations":{"en":"Invalid value \\"0\\" for limit."}}',
+          400,
+          request: request,
+        );
+      });
+      final wiki = WikiClient.wikipedia(httpClient: mock);
+      await expectLater(
+        () => wiki.search.pages('Earth', limit: 0),
+        throwsA(isA<WikiRequestException>().having(
+          (e) => e.message,
+          'message',
+          endsWith('(server said: Invalid value "0" for limit.)'),
+        )),
+      );
+      wiki.close();
+    });
+
+    test('include a plain-text error body', () async {
+      final mock = MockClient((request) async {
+        return http.Response('Please set a user-agent', 403);
+      });
+      final wiki = WikiClient.wikipedia(httpClient: mock);
+      await expectLater(
+        () => wiki.pages.summary('Earth'),
+        throwsA(isA<WikiRequestException>().having(
+          (e) => e.message,
+          'message',
+          contains('(server said: Please set a user-agent)'),
+        )),
+      );
+      wiki.close();
+    });
+
+    test('leave out HTML error pages', () async {
+      final mock = MockClient((request) async {
+        return http.Response('<!DOCTYPE html><title>Error</title>', 502);
+      });
+      final wiki = WikiClient.wikipedia(
+        httpClient: mock,
+        retryPolicy: const RetryPolicy.none(),
+      );
+      await expectLater(
+        () => wiki.pages.summary('Earth'),
+        throwsA(isA<WikiServerException>().having(
+          (e) => e.message,
+          'message',
+          isNot(contains('server said')),
+        )),
+      );
+      wiki.close();
+    });
+
+    test('report a fractional timeout in milliseconds', () async {
+      final mock = MockClient((request) async {
+        await Future<void>.delayed(const Duration(seconds: 2));
+        return http.Response('{}', 200);
+      });
+      final wiki = WikiClient.wikipedia(
+        httpClient: mock,
+        timeout: const Duration(milliseconds: 300),
+        retryPolicy: const RetryPolicy.none(),
+      );
+      await expectLater(
+        () => wiki.pages.summary('Earth'),
+        throwsA(isA<WikiTimeoutException>().having(
+          (e) => e.message,
+          'message',
+          'Request timed out after 300ms',
+        )),
+      );
+      wiki.close();
+    });
+
+    test('toString names the exception type', () {
+      const e = WikiNotFoundException(message: 'gone', statusCode: 404);
+      expect(e.toString(), 'WikiNotFoundException: gone');
+      expect(
+        const WikiParseException(message: 'bad').toString(),
+        'WikiParseException: bad',
+      );
+    });
+
     test('WikiNotFoundException message contains URL', () async {
       final mock = MockClient((request) async {
         return http.Response('Not Found', 404, request: request);

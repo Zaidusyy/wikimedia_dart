@@ -28,8 +28,12 @@ sealed class WikiException implements Exception {
   /// The underlying exception that caused this error, if any.
   final Object? cause;
 
+  /// The type name used by [toString]. Spelled out rather than taken from
+  /// `runtimeType`, which is minified in release web builds.
+  String get _name;
+
   @override
-  String toString() => '$runtimeType: $message';
+  String toString() => '$_name: $message';
 }
 
 /// A network-level failure: DNS, socket, or lost connectivity.
@@ -45,6 +49,9 @@ final class WikiNetworkException extends WikiException {
 
   /// The request URI, if available.
   final Uri? uri;
+
+  @override
+  String get _name => 'WikiNetworkException';
 }
 
 /// The request exceeded the configured [WikiClient] timeout duration.
@@ -54,6 +61,9 @@ final class WikiTimeoutException extends WikiException {
 
   /// The request URI, if available.
   final Uri? uri;
+
+  @override
+  String get _name => 'WikiTimeoutException';
 }
 
 /// The requested resource does not exist (HTTP 404).
@@ -70,6 +80,9 @@ final class WikiNotFoundException extends WikiException {
 
   /// The request URI, if available.
   final Uri? uri;
+
+  @override
+  String get _name => 'WikiNotFoundException';
 }
 
 /// The API rate limit was exceeded (HTTP 429).
@@ -85,6 +98,9 @@ final class WikiRateLimitException extends WikiException {
 
   /// Suggested wait time before retrying, or `null` if not specified.
   final Duration? retryAfter;
+
+  @override
+  String get _name => 'WikiRateLimitException';
 }
 
 /// The server rejected the request with a 4xx status other than 404 or 429
@@ -101,6 +117,9 @@ final class WikiRequestException extends WikiException {
 
   /// The 4xx HTTP status code returned by the server.
   final int statusCode;
+
+  @override
+  String get _name => 'WikiRequestException';
 }
 
 /// The server returned a 5xx error.
@@ -118,6 +137,9 @@ final class WikiServerException extends WikiException {
   /// Suggested wait time before retrying, parsed from the `Retry-After`
   /// response header when present (e.g. on a 503). `null` otherwise.
   final Duration? retryAfter;
+
+  @override
+  String get _name => 'WikiServerException';
 }
 
 /// The API response could not be deserialised into the expected model.
@@ -126,4 +148,7 @@ final class WikiServerException extends WikiException {
 final class WikiParseException extends WikiException {
   /// Creates a [WikiParseException].
   const WikiParseException({required super.message, super.cause});
+
+  @override
+  String get _name => 'WikiParseException';
 }
