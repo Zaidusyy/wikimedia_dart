@@ -19,7 +19,7 @@ class SearchResponse {
   /// already so adding it won't be a breaking change.
   final String? nextCursor;
 
-  /// Deserialises a [SearchResponse] from a JSON map.
+  /// Parses a [SearchResponse] from the API's JSON.
   factory SearchResponse.fromJson(Map<String, dynamic> json) => SearchResponse(
         pages: (json['pages'] as List<dynamic>)
             .map(
@@ -29,7 +29,7 @@ class SearchResponse {
         nextCursor: json['next'] as String?,
       );
 
-  /// Serialises this response back to the API's JSON shape.
+  /// Converts this response back to the API's JSON shape.
   ///
   /// Round-trips through [SearchResponse.fromJson].
   Map<String, dynamic> toJson() => {

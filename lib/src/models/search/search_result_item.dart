@@ -29,7 +29,7 @@ class SearchResultItem {
   /// Thumbnail image for this result.
   final WikiThumbnail? thumbnail;
 
-  /// Deserialises a [SearchResultItem] from a JSON map.
+  /// Parses a [SearchResultItem] from the API's JSON.
   factory SearchResultItem.fromJson(Map<String, dynamic> json) =>
       SearchResultItem(
         title: json['title'] as String,
@@ -43,7 +43,7 @@ class SearchResultItem {
             : null,
       );
 
-  /// Serialises this result back to the API's JSON shape.
+  /// Converts this result back to the API's JSON shape.
   ///
   /// Round-trips through [SearchResultItem.fromJson]. Null fields are
   /// omitted. The page id is written as `id`, the key the search endpoint

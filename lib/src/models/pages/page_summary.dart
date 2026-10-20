@@ -61,7 +61,7 @@ class PageSummary {
   /// Date and time the article was last modified.
   final DateTime? lastModified;
 
-  /// Deserialises a [PageSummary] from a JSON map.
+  /// Parses a [PageSummary] from the API's JSON.
   factory PageSummary.fromJson(Map<String, dynamic> json) => PageSummary(
         title: json['title'] as String,
         displayTitle: json['displaytitle'] as String,
@@ -86,7 +86,7 @@ class PageSummary {
             : null,
       );
 
-  /// Serialises this summary back to the API's JSON shape.
+  /// Converts this summary back to the API's JSON shape.
   ///
   /// Round-trips through [PageSummary.fromJson]. Null fields are omitted
   /// rather than written as `null`, so a cached map stays compact.

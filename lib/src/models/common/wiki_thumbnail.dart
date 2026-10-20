@@ -19,7 +19,7 @@ class WikiThumbnail {
   /// Height of the thumbnail in pixels, or 0 if the API didn't say.
   final int height;
 
-  /// Deserialises a [WikiThumbnail] from a JSON map.
+  /// Parses a [WikiThumbnail] from the API's JSON.
   ///
   /// The search endpoints may send null dimensions; those become 0 rather
   /// than failing the whole response.
@@ -35,7 +35,7 @@ class WikiThumbnail {
     );
   }
 
-  /// Serialises this thumbnail back to the API's JSON shape.
+  /// Converts this thumbnail back to the API's JSON shape.
   ///
   /// Round-trips through [WikiThumbnail.fromJson].
   Map<String, dynamic> toJson() => {

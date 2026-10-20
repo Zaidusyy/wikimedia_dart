@@ -144,7 +144,7 @@ final class WikiServerException extends WikiException {
   String get _name => 'WikiServerException';
 }
 
-/// The API response could not be deserialised into the expected model.
+/// The API response could not be parsed into the expected model.
 ///
 /// This usually indicates an upstream Wikimedia API schema change.
 final class WikiParseException extends WikiException {

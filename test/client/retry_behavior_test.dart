@@ -5,12 +5,12 @@ import 'package:wikimedia_dart/wikimedia_dart.dart';
 
 import '../test_helpers.dart';
 
-/// A retry policy with no backoff delay, so behavioural tests run instantly
+/// A retry policy with no backoff delay, so behavior tests run instantly
 /// while still exercising the full retry loop.
 const _instant = RetryPolicy(initialBackoff: Duration.zero);
 
 void main() {
-  group('retry behaviour', () {
+  group('retry behavior', () {
     test('retries a 5xx failure then succeeds', () async {
       final summaryJson = fixture('responses/page_summary_earth.json');
       var calls = 0;

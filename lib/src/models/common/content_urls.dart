@@ -15,7 +15,7 @@ class ContentUrls {
   /// URL to the article's mobile web page.
   final String mobileUrl;
 
-  /// Deserialises a [ContentUrls] from a JSON map.
+  /// Parses a [ContentUrls] from the API's JSON.
   ///
   /// Expects the shape returned by the Wikimedia REST API's
   /// `content_urls` field:
@@ -30,7 +30,7 @@ class ContentUrls {
         mobileUrl: (json['mobile'] as Map<String, dynamic>)['page'] as String,
       );
 
-  /// Serialises this back to the API's nested `content_urls` shape.
+  /// Converts this back to the API's nested `content_urls` shape.
   ///
   /// Round-trips through [ContentUrls.fromJson].
   Map<String, dynamic> toJson() => {

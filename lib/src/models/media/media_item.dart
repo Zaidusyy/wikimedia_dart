@@ -29,7 +29,7 @@ class MediaItem {
   /// Caption text for this media item, if available.
   final String? caption;
 
-  /// Deserialises a [MediaItem] from a JSON map.
+  /// Parses a [MediaItem] from the API's JSON.
   factory MediaItem.fromJson(Map<String, dynamic> json) {
     // The media-list endpoint nests items; extract srcUrl from 'original'
     // or the first entry in 'srcset' when available.
@@ -64,7 +64,7 @@ class MediaItem {
     );
   }
 
-  /// Serialises this item back to the API's JSON shape.
+  /// Converts this item back to the API's JSON shape.
   ///
   /// Round-trips through [MediaItem.fromJson]. The source URL is written
   /// under `original`, the first place `fromJson` looks for it.

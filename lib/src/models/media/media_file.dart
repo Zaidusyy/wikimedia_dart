@@ -39,7 +39,7 @@ class MediaFile {
   /// Size of the file in bytes, if available.
   final int? fileSizeBytes;
 
-  /// Deserialises a [MediaFile] from a JSON map.
+  /// Parses a [MediaFile] from the API's JSON.
   factory MediaFile.fromJson(Map<String, dynamic> json) {
     final original =
         (json['originalimage'] ?? json['original']) as Map<String, dynamic>?;
@@ -58,7 +58,7 @@ class MediaFile {
     );
   }
 
-  /// Serialises this file back to the API's JSON shape.
+  /// Converts this file back to the API's JSON shape.
   ///
   /// Round-trips through [MediaFile.fromJson]. Source URL and dimensions go
   /// under `originalimage`, where `fromJson` reads them.
