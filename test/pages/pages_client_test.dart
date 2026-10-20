@@ -159,9 +159,9 @@ void main() {
 
       expect(related, isNotEmpty);
       expect(related, everyElement(isA<SearchResultItem>()));
-      expect(related.first.title, 'Europa (moon)');
-      expect(related.first.pageId, 43127);
-      expect(related.first.description, 'Smallest Galilean moon of Jupiter');
+      expect(related.first.title, 'Future of Earth');
+      expect(related.first.pageId, 24179592);
+      expect(related.first.description, 'Long-term future of planet Earth');
     });
 
     test('User-Agent header is sent on every request', () async {

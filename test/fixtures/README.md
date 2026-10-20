@@ -1,26 +1,25 @@
-﻿# Wikimedia Dart Fixtures
+# Fixtures
 
-This directory contains verbatim API responses captured from the live
-Wikimedia REST API. They are the ground truth for model parsing tests.
+Responses captured from the live Wikimedia API with curl and saved as is.
+The model and client tests parse these, so they show the real shapes.
 
-## Capturing fixtures
+## Capturing
 
 ```bash
-curl "https://en.wikipedia.org/api/rest_v1/page/summary/Earth" \
+UA='wikimedia_dart-tests (https://github.com/Zaidusyy/wikimedia_dart)'
+
+curl -A "$UA" "https://en.wikipedia.org/api/rest_v1/page/summary/Earth" \
   > test/fixtures/responses/page_summary_earth.json
 
-# Note: The /page/related endpoint has been decommissioned by Wikimedia.
-# page_related_earth_legacy.html preserves the original decommissioned page error response.
-# page_related_earth_contract.json is a simulated contract-compliant mock response for testing.
-
-curl "https://en.wikipedia.org/w/rest.php/v1/search/page?q=climate+change&limit=3" \
+curl -A "$UA" "https://en.wikipedia.org/w/rest.php/v1/search/page?q=climate+change&limit=3" \
   > test/fixtures/responses/search_climate_change.json
 
-curl "https://en.wikipedia.org/api/rest_v1/page/media-list/Earth" \
+curl -A "$UA" "https://en.wikipedia.org/api/rest_v1/page/media-list/Earth" \
   > test/fixtures/responses/media_list_earth.json
+
+curl -A "$UA" "https://en.wikipedia.org/w/rest.php/v1/search/page?q=morelike:Earth&limit=5" \
+  > test/fixtures/responses/page_related_earth_morelike.json
 ```
 
-**Important:** Do not hand-craft fixture JSON. Capture verbatim from the
-live API to ensure tests reflect real response shapes. For decommissioned endpoints
-or special test conditions, simulated contract fixtures are placed in `*_contract.json`.
-
+Wikimedia rejects requests without a User-Agent, hence the `-A`. Don't edit
+the captured JSON by hand; capture it again instead.

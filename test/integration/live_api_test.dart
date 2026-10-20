@@ -87,6 +87,12 @@ void main() {
       expect(summary.contentUrls?.desktopUrl, contains('fr.wikipedia.org'));
     }, timeout: timeout);
 
+    // Search responses carry no charset, so this catches a latin1 decode.
+    test('search keeps non-ASCII titles intact', () async {
+      final titles = await wiki.search.autocomplete('पृथ्वी', language: 'hi');
+      expect(titles, contains('पृथ्वी'));
+    }, timeout: timeout);
+
     test('a missing page throws WikiNotFoundException', () async {
       await expectLater(
         () => wiki.pages.summary('ThisArticleDefinitelyDoesNotExist_zzq123'),

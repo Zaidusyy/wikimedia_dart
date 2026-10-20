@@ -20,7 +20,7 @@ void main() {
       final items = await wiki.media.listForPage('Earth');
 
       expect(items, isNotEmpty);
-      // Let's check some items from the fixture (like the first image).
+      // The first item in the captured Earth media list.
       final first = items.first;
       expect(first.title, 'File:Meteosat-12-fci-march-equinox-2025-noon.jpg');
       expect(first.type, 'image');
@@ -111,15 +111,15 @@ void main() {
       ''';
 
       final mock = MockClient((request) async {
-        expect(request.url.host, 'en.wikipedia.org');
+        expect(request.url.host, 'commons.wikimedia.org');
         expect(request.url.path, '/api/rest_v1/page/summary/File%3AEarth.jpg');
         return http.Response(mockResponse, 200, headers: {
           'content-type': 'application/json; charset=utf-8',
         });
       });
 
-      final wiki = WikiClient.wikipedia(httpClient: mock);
-      final file = await wiki.media.getFile('File:Earth.jpg');
+      final commons = WikiClient.commons(httpClient: mock);
+      final file = await commons.media.getFile('File:Earth.jpg');
 
       expect(file.title, 'File:Earth.jpg');
       expect(file.mimeType, 'image');
