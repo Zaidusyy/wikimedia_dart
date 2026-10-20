@@ -183,6 +183,105 @@ void main() {
       expect(uri.host, 'wiki.example.org');
     });
 
+    group('Custom base URL', () {
+      WikiConfig configFor(String baseUrl, {String? restBasePath}) =>
+          WikiConfig(
+            language: 'en',
+            project: WikiProject.wikipedia,
+            timeout: const Duration(seconds: 30),
+            userAgent: 'test/1.0',
+            customBaseUrl: baseUrl,
+            customRestBasePath: restBasePath ?? '/rest.php/v1',
+          );
+
+      test('defaults to the MediaWiki core REST path, not RESTBase', () {
+        final uri = UrlBuilder.build(
+          config: configFor('https://wiki.example.org'),
+          path: '/search/page',
+        );
+        expect(
+            uri.toString(), 'https://wiki.example.org/rest.php/v1/search/page');
+      });
+
+      test('keeps a path prefix on the base URL', () {
+        final uri = UrlBuilder.build(
+          config: configFor('https://example.org/w'),
+          path: '/search/page',
+        );
+        expect(uri.path, '/w/rest.php/v1/search/page');
+      });
+
+      test('does not double the slash on a trailing-slash base URL', () {
+        final uri = UrlBuilder.build(
+          config: configFor('https://example.org/w/'),
+          path: '/search/page',
+        );
+        expect(uri.path, '/w/rest.php/v1/search/page');
+        expect(uri.path, isNot(contains('//')));
+      });
+
+      test('keeps a root base URL free of a doubled slash', () {
+        final uri = UrlBuilder.build(
+          config: configFor('https://example.org/'),
+          path: '/search/page',
+        );
+        expect(uri.path, '/rest.php/v1/search/page');
+      });
+
+      test('keeps a non-https scheme', () {
+        final uri = UrlBuilder.build(
+          config: configFor('http://localhost'),
+          path: '/search/page',
+        );
+        expect(uri.scheme, 'http');
+      });
+
+      test('keeps an explicit port', () {
+        final uri = UrlBuilder.build(
+          config: configFor('http://localhost:8080'),
+          path: '/search/page',
+        );
+        expect(uri.toString(), 'http://localhost:8080/rest.php/v1/search/page');
+      });
+
+      test('honors a RESTBase override for Wikimedia-style hosts', () {
+        final uri = UrlBuilder.build(
+          config: configFor(
+            'https://mirror.example.org',
+            restBasePath: '/api/rest_v1',
+          ),
+          path: '/page/summary/Earth',
+        );
+        expect(uri.path, '/api/rest_v1/page/summary/Earth');
+      });
+
+      test('routes search through the custom base, not the Wikimedia one', () {
+        final uri = UrlBuilder.build(
+          config: configFor('https://wiki.example.org'),
+          path: '/search/page',
+        );
+        expect(uri.path, isNot(startsWith('/w/rest.php/v1')));
+      });
+
+      test('ignores the language override', () {
+        final uri = UrlBuilder.build(
+          config: configFor('https://wiki.example.org'),
+          path: '/search/page',
+          languageOverride: 'fr',
+        );
+        expect(uri.host, 'wiki.example.org');
+      });
+
+      test('still applies query parameters', () {
+        final uri = UrlBuilder.build(
+          config: configFor('https://wiki.example.org'),
+          path: '/search/page',
+          queryParameters: {'q': 'earth', 'limit': '5'},
+        );
+        expect(uri.queryParameters, {'q': 'earth', 'limit': '5'});
+      });
+    });
+
     test('Path starts with /api/rest_v1 for non-search paths', () {
       final uri = UrlBuilder.build(
         config: englishWikipedia,

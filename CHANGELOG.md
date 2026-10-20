@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- `WikiClient.custom()` could not reach most self-hosted MediaWiki
+  installations. Only the host of `baseUrl` was kept, so
+  `http://localhost:8080` became `https://localhost/...` and
+  `https://example.org/w` lost its `/w`. The scheme, port, and path prefix are
+  now honored too.
+
+### Added
+
+- `WikiClient.custom()` takes `restBasePath` (default `'/rest.php/v1'`, where
+  MediaWiki core serves its REST API) and `project`. The unnamed constructor
+  takes the same path as `customRestBasePath`.
+
+### Changed
+
+- **Breaking:** `WikiClient.custom()` now sends every request to
+  `{baseUrl}/rest.php/v1`. Content requests used to go to `/api/rest_v1`,
+  which is RESTBase and effectively only runs on Wikimedia's own hosts, so
+  they returned 404 on a stock MediaWiki install. Search went to
+  `/w/rest.php/v1`. If your wiki serves its scripts from `/w`, include it in
+  `baseUrl` (`https://example.org/w`). For a RESTBase mirror, pass
+  `restBasePath: '/api/rest_v1'`. MediaWiki core has no `/page/summary/`
+  endpoint, so `pages.summary()` still needs a Wikimedia host; `search` works
+  against both.
+
 ## [0.1.2] - 2026-10-21
 
 ### Fixed

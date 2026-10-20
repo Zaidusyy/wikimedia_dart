@@ -16,6 +16,7 @@ final class WikiConfig {
     required this.timeout,
     required this.userAgent,
     this.customBaseUrl,
+    this.customRestBasePath = '/rest.php/v1',
     this.retryPolicy = const RetryPolicy(),
   });
 
@@ -36,8 +37,15 @@ final class WikiConfig {
 
   /// Base URL for custom / self-hosted MediaWiki installations.
   ///
-  /// `null` for all standard Wikimedia-hosted projects.
+  /// `null` for all standard Wikimedia-hosted projects. When set, its scheme,
+  /// host, port, and path prefix are all used as given.
   final String? customBaseUrl;
+
+  /// REST base path appended to [customBaseUrl], ignored when that is `null`.
+  ///
+  /// Defaults to `'/rest.php/v1'`, where MediaWiki core serves its REST API.
+  /// Wikimedia's own hosts run RESTBase at `'/api/rest_v1'` instead.
+  final String customRestBasePath;
 
   /// Governs automatic retry of transient request failures.
   ///

@@ -44,6 +44,7 @@ class WikiClient {
     Duration timeout = const Duration(seconds: 30),
     String userAgent = defaultUserAgent,
     String? customBaseUrl,
+    String customRestBasePath = '/rest.php/v1',
     RetryPolicy retryPolicy = const RetryPolicy(),
     http.Client? httpClient,
   })  : _config = WikiConfig(
@@ -52,6 +53,7 @@ class WikiClient {
           timeout: timeout,
           userAgent: userAgent,
           customBaseUrl: customBaseUrl,
+          customRestBasePath: customRestBasePath,
           retryPolicy: retryPolicy,
         ),
         _httpClient = httpClient ?? http.Client(),
@@ -129,15 +131,31 @@ class WikiClient {
   /// Creates a [WikiClient] targeting a custom / self-hosted MediaWiki
   /// installation.
   ///
-  /// Support is limited in 0.1.x: only the host of [baseUrl] is used, and
-  /// every request goes over HTTPS on the default port. Search requests go
-  /// to `/w/rest.php/v1`, so [SearchClient] works on a wiki that serves its
-  /// scripts from `/w` (and [PagesClient.related] if it runs CirrusSearch).
-  /// Summaries, HTML and media go to `/api/rest_v1`, which only Wikimedia's
-  /// own wikis serve, so they return 404 elsewhere. [language] is not used.
+  /// [baseUrl] is where MediaWiki is served from. Its scheme, host, port, and
+  /// path prefix are all kept, so all of these work:
+  ///
+  /// ```dart
+  /// WikiClient.custom(baseUrl: 'https://wiki.example.org');
+  /// WikiClient.custom(baseUrl: 'https://example.org/w');
+  /// WikiClient.custom(baseUrl: 'http://localhost:8080');
+  /// ```
+  ///
+  /// Requests go to `{baseUrl}{restBasePath}{endpoint}`. [restBasePath]
+  /// defaults to `'/rest.php/v1'`, where MediaWiki core serves its REST API.
+  /// Pass `'/api/rest_v1'` for a host running RESTBase, as Wikimedia's own
+  /// wikis do.
+  ///
+  /// On a stock MediaWiki only search works: [SearchClient], and
+  /// [PagesClient.related] if the wiki runs CirrusSearch. Summaries, HTML and
+  /// media lists use RESTBase paths, so they return 404 there.
+  ///
+  /// [language] and [project] are recorded on the config but don't change
+  /// the URL, since [baseUrl] supplies the host.
   factory WikiClient.custom({
     required String baseUrl,
     String language = 'en',
+    WikiProject project = WikiProject.wikipedia,
+    String restBasePath = '/rest.php/v1',
     Duration timeout = const Duration(seconds: 30),
     String userAgent = defaultUserAgent,
     RetryPolicy retryPolicy = const RetryPolicy(),
@@ -146,10 +164,11 @@ class WikiClient {
       WikiClient._internal(
         config: WikiConfig(
           language: language,
-          project: WikiProject.wikipedia,
+          project: project,
           timeout: timeout,
           userAgent: userAgent,
           customBaseUrl: baseUrl,
+          customRestBasePath: restBasePath,
           retryPolicy: retryPolicy,
         ),
         httpClient: httpClient,

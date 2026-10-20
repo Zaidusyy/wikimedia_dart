@@ -25,6 +25,24 @@ abstract final class UrlBuilder {
     String? languageOverride,
     Map<String, String>? queryParameters,
   }) {
+    final query = queryParameters?.isEmpty ?? true ? null : queryParameters;
+
+    // Self-hosted MediaWiki: the caller's base URL supplies everything except
+    // the endpoint. Scheme, port, and any path prefix all have to survive,
+    // since wikis at http://localhost:8080 or https://example.org/w are common.
+    final customBaseUrl = config.customBaseUrl;
+    if (customBaseUrl != null) {
+      final base = Uri.parse(customBaseUrl);
+      return Uri(
+        scheme: base.scheme.isEmpty ? 'https' : base.scheme,
+        host: base.host,
+        port: base.hasPort ? base.port : null,
+        path: '${_stripTrailingSlash(base.path)}'
+            '${config.customRestBasePath}$path',
+        queryParameters: query,
+      );
+    }
+
     final language = config.resolveLanguage(languageOverride);
     final host = _resolveHost(config, language);
     // Search lives under a different base path than the REST content API.
@@ -37,8 +55,7 @@ abstract final class UrlBuilder {
       scheme: 'https',
       host: host,
       path: '$basePath$path',
-      queryParameters:
-          queryParameters?.isEmpty ?? true ? null : queryParameters,
+      queryParameters: query,
     );
   }
 
@@ -53,10 +70,6 @@ abstract final class UrlBuilder {
       Uri.encodeComponent(title.trim().replaceAll(' ', '_'));
 
   static String _resolveHost(WikiConfig config, String language) {
-    // Self-hosted MediaWiki: take the host straight from the custom URL.
-    if (config.customBaseUrl != null) {
-      return Uri.parse(config.customBaseUrl!).host;
-    }
     // Commons and Wikidata have no language prefix.
     if (!config.project.supportsLanguagePrefix) {
       return config.project.baseDomain;
@@ -64,4 +77,9 @@ abstract final class UrlBuilder {
     // Everything else: {lang}.{project}.org, e.g. en.wikipedia.org
     return '$language.${config.project.baseDomain}';
   }
+
+  /// Drops one trailing `/` so joining a base path onto an endpoint can't
+  /// produce `//`. `'/w/'` and `'/'` become `'/w'` and `''`.
+  static String _stripTrailingSlash(String path) =>
+      path.endsWith('/') ? path.substring(0, path.length - 1) : path;
 }
