@@ -33,7 +33,7 @@ class PagesClient with ServiceBase {
     assertOpen();
     final uri = UrlBuilder.build(
       config: config,
-      path: '${Endpoints.pageSummary}/${Uri.encodeComponent(title)}',
+      path: '${Endpoints.pageSummary}/${UrlBuilder.titleSegment(title)}',
       languageOverride: language,
     );
     return get(uri, PageSummary.fromJson);
@@ -46,7 +46,7 @@ class PagesClient with ServiceBase {
     assertOpen();
     final uri = UrlBuilder.build(
       config: config,
-      path: '${Endpoints.pageHtml}/${Uri.encodeComponent(title)}',
+      path: '${Endpoints.pageHtml}/${UrlBuilder.titleSegment(title)}',
       languageOverride: language,
     );
     return getRaw(uri);

@@ -128,6 +128,18 @@ void main() {
       expect(html, mockHtml);
     });
 
+    test('title paths use underscores, not %20', () async {
+      final paths = <String>[];
+      final mock = MockClient((request) async {
+        paths.add(request.url.path);
+        return http.Response('<html></html>', 200);
+      });
+
+      final wiki = WikiClient.wikipedia(httpClient: mock);
+      await wiki.pages.html('New York City');
+      expect(paths.single, '/api/rest_v1/page/html/New_York_City');
+    });
+
     test('related() returns List<SearchResultItem> via morelike on 200',
         () async {
       final mockResponse =

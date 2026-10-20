@@ -15,9 +15,9 @@ abstract final class UrlBuilder {
   /// ```dart
   /// final uri = UrlBuilder.build(
   ///   config: config,
-  ///   path: '${Endpoints.pageSummary}/${Uri.encodeComponent('New York City')}',
+  ///   path: '${Endpoints.pageSummary}/${UrlBuilder.titleSegment('New York City')}',
   /// );
-  /// // gives https://en.wikipedia.org/api/rest_v1/page/summary/New%20York%20City
+  /// // gives https://en.wikipedia.org/api/rest_v1/page/summary/New_York_City
   /// ```
   static Uri build({
     required WikiConfig config,
@@ -41,6 +41,16 @@ abstract final class UrlBuilder {
           queryParameters?.isEmpty ?? true ? null : queryParameters,
     );
   }
+
+  /// Encodes [title] for use as one path segment, in the canonical form
+  /// MediaWiki itself uses in URLs: surrounding whitespace dropped and spaces
+  /// as underscores.
+  ///
+  /// Wikimedia treats `New York City` and `New_York_City` as the same page,
+  /// but the HTML endpoint answers the spaced form with a redirect, and the
+  /// CDN only purges the underscore form when a page is edited.
+  static String titleSegment(String title) =>
+      Uri.encodeComponent(title.trim().replaceAll(' ', '_'));
 
   static String _resolveHost(WikiConfig config, String language) {
     // Self-hosted MediaWiki: take the host straight from the custom URL.

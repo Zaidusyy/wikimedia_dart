@@ -226,4 +226,20 @@ void main() {
       expect(uri.host, 'es.wiktionary.org');
     });
   });
+
+  group('UrlBuilder.titleSegment', () {
+    test('uses underscores for spaces and trims the ends', () {
+      expect(UrlBuilder.titleSegment(' New York City '), 'New_York_City');
+    });
+
+    test('still encodes reserved characters', () {
+      expect(UrlBuilder.titleSegment('AC/DC'), 'AC%2FDC');
+      expect(UrlBuilder.titleSegment('100% (album)'), '100%25_(album)');
+      expect(UrlBuilder.titleSegment('Who?'), 'Who%3F');
+    });
+
+    test('encodes non-ASCII titles', () {
+      expect(UrlBuilder.titleSegment('पृथ्वी'), Uri.encodeComponent('पृथ्वी'));
+    });
+  });
 }

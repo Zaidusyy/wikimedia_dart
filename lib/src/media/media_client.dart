@@ -33,7 +33,7 @@ class MediaClient with ServiceBase {
     assertOpen();
     final uri = UrlBuilder.build(
       config: config,
-      path: '${Endpoints.pageMediaList}/${Uri.encodeComponent(title)}',
+      path: '${Endpoints.pageMediaList}/${UrlBuilder.titleSegment(title)}',
       languageOverride: language,
     );
     return get(
@@ -53,7 +53,7 @@ class MediaClient with ServiceBase {
     assertOpen();
     final uri = UrlBuilder.build(
       config: config,
-      path: '${Endpoints.pageSummary}/${Uri.encodeComponent(fileTitle)}',
+      path: '${Endpoints.pageSummary}/${UrlBuilder.titleSegment(fileTitle)}',
     );
     return get(uri, MediaFile.fromJson);
   }
