@@ -5,172 +5,144 @@
 [![pub points](https://img.shields.io/pub/points/wikimedia_dart)](https://pub.dev/packages/wikimedia_dart/score)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A type-safe Dart client for the Wikimedia REST APIs.
-
-## Overview
-
-Wikimedia Dart is a typed client for the Wikimedia REST APIs. It runs anywhere Dart does (mobile, desktop, web, server, CLI) and doesn't depend on Flutter.
+A typed Dart client for the Wikimedia REST APIs: Wikipedia, Wiktionary, and
+Commons. It runs anywhere Dart does (Flutter, server, CLI, web) and doesn't
+depend on Flutter.
 
 It's an independent project, not an official Wikimedia Foundation library.
 
-## Why
-
-Pulling Wikipedia, Wiktionary, or Commons data into a Dart app usually means hand-rolling HTTP calls or scraping. This package gives you typed responses, a single exception hierarchy for errors, clear client lifecycle, and one client that can target several projects.
-
 ## Features
 
-- Typed endpoints for page summaries, raw HTML, related pages, search, autocomplete, and media.
-- One exception hierarchy that maps HTTP status codes (404, 429, 4xx, 5xx) to typed errors.
-- Automatic retry with backoff for transient failures.
-- Works with Wikipedia, Wiktionary, Commons, and self-hosted MediaWiki.
-- No Flutter dependency; runs on the plain Dart VM, servers, and CLIs.
-- Configurable timeouts, base URL, and User-Agent.
+- Page summaries, article HTML, related pages, full-text search,
+  autocomplete, and media.
+- Typed models, and one sealed exception type for every failure.
+- Retries with backoff for rate limits, server errors, and network failures.
+- A language override on each call, so one client can read any language
+  edition.
+- Configurable timeout and User-Agent.
 
 ## Installation
 
-Add `wikimedia_dart` to your `pubspec.yaml` dependencies:
-
 ```yaml
 dependencies:
-  wikimedia_dart: ^0.1.0
+  wikimedia_dart: ^0.1.2
 ```
 
-Then run:
-
-```bash
-dart pub get
-```
-
-## Quick Start
+## Quick start
 
 ```dart
 import 'package:wikimedia_dart/wikimedia_dart.dart';
 
 void main() async {
-  // Initialize a client targeting Wikipedia
-  final wiki = WikiClient.wikipedia();
+  final wiki = WikiClient.wikipedia(
+    userAgent: 'MyApp/1.0 (you@example.com)',
+  );
 
   try {
-    // Fetch summary for the "Earth" article
     final summary = await wiki.pages.summary('Earth');
-    print('Title: ${summary.title}');
-    print('Extract: ${summary.extract}');
+    print(summary.title);
+    print(summary.extract);
   } finally {
-    // Always close the client to release resources
     wiki.close();
   }
 }
 ```
 
-## User-Agent Policy and Best Practices
+A client holds one HTTP connection pool, so reuse it and call `close()` when
+you're done.
 
-To comply with the [Wikimedia User-Agent Policy](https://meta.wikimedia.org/wiki/User-Agent_policy), all applications accessing Wikimedia APIs must supply a clear, descriptive, and unique `User-Agent` header. This allows Wikimedia sysadmins to identify your application and contact you in case of excessive resource consumption, avoiding automated IP-based rate limiting or blocks.
+## Identify your app
 
-By default, `WikiClient` generates a generic User-Agent carrying the package
-version: `WikimediaDart/<version> (https://github.com/Zaidusyy/wikimedia_dart)`
-
-### Customizing the User-Agent (Recommended)
-
-When initializing the `WikiClient` in production applications, you should always supply a custom User-Agent identifying your application name, version, and contact information (such as an email or website):
+Wikimedia asks every client to send a User-Agent that names the app and gives
+a way to contact you (see the
+[User-Agent policy](https://foundation.wikimedia.org/wiki/Policy:Wikimedia_Foundation_User-Agent_Policy)).
+Requests without one get much lower rate limits, and some are refused.
 
 ```dart
 final wiki = WikiClient.wikipedia(
-  userAgent: 'MyCoolApp/1.2.0 (contact@example.com; https://mycoolapp.com)',
+  userAgent: 'MyApp/1.2.0 (you@example.com; https://myapp.example)',
 );
 ```
 
-**Wikimedia expectations for your User-Agent string:**
-1. **Be unique and descriptive**: Include your application name and version.
-2. **Provide contact info**: Provide a valid contact email address or application website URL.
-3. **Do not spoof**: Never fake your browser User-Agent or use generic headers, as this can trigger aggressive security filters.
+If you don't pass one, the package sends
+`WikimediaDart/<version> (https://github.com/Zaidusyy/wikimedia_dart)`.
+That's fine for trying things out, but it's shared by everyone using the
+package, so set your own in anything you ship.
 
 ## Examples
 
-### Page Summaries, HTML, and Related Articles
+### Pages
 
 ```dart
 final wiki = WikiClient.wikipedia();
 
-// Get the raw HTML content of an article
-final htmlContent = await wiki.pages.html('Earth');
+// The article's HTML.
+final html = await wiki.pages.html('Earth');
 
-// Get related articles ("more like this" search).
-// Returns List<SearchResultItem>.
-final relatedPages = await wiki.pages.related('Earth', limit: 5);
-for (final page in relatedPages) {
-  print('Related page: ${page.title} (${page.description})');
+// Pages similar to this one (a "more like this" search).
+final related = await wiki.pages.related('Earth', limit: 5);
+for (final page in related) {
+  print('${page.title}: ${page.description}');
 }
 ```
 
-### Full-Text Search and Autocomplete
+### Search
 
 ```dart
-final wiki = WikiClient.wikipedia();
-
-// Perform full-text search
-final searchResult = await wiki.search.pages('Climate change', limit: 5);
-for (final page in searchResult.pages) {
+final results = await wiki.search.pages('climate change', limit: 5);
+for (final page in results.pages) {
   print('${page.title}: ${page.description}');
 }
 
-// Perform title autocomplete
-final suggestions = await wiki.search.autocomplete('Eart');
-for (final suggestion in suggestions) {
-  print('Suggestion: $suggestion');
-}
+// Titles for a type-ahead box.
+final titles = await wiki.search.autocomplete('Eart');
 ```
 
-### Media and File Metadata
+`limit` is 1 to 100 on every search call.
+
+### Media
 
 ```dart
-final wiki = WikiClient.wikipedia();
-
-// List all media files used on a page
-final mediaList = await wiki.media.listForPage('Earth');
-for (final mediaItem in mediaList) {
-  print('Media Title: ${mediaItem.title}');
+// Media used in an article.
+final media = await wiki.media.listForPage('Earth');
+for (final item in media) {
+  print(item.title);
 }
 
-// Retrieve file information from Wikimedia Commons
+// Details of one file. Files used on Wikipedia mostly live on Commons,
+// so ask a Commons client.
 final commons = WikiClient.commons();
-final fileMetadata = await commons.media.getFile('File:Earth.jpg');
-print('Source URL: ${fileMetadata.sourceUrl}');
+final file = await commons.media.getFile('File:Earth_Western_Hemisphere.jpg');
+print(file.sourceUrl);
 ```
 
-## Language Override
+## Other languages
 
-Every API method supports a BCP 47 language override to query localized wikis. By default, Wikipedia and Wiktionary clients target English (`en`).
+Wikipedia and Wiktionary clients default to English. Pass `language` to a
+constructor, or to a single call, with the wiki's subdomain code (`fr`, `de`,
+`simple`, `zh-yue`, ...):
 
 ```dart
 final wiki = WikiClient.wikipedia();
 
-// Query in French
-final frenchSummary = await wiki.pages.summary('Terre', language: 'fr');
-
-// Query in German
-final germanSummary = await wiki.pages.summary('Erde', language: 'de');
+final french = await wiki.pages.summary('Terre', language: 'fr');
+final german = await wiki.pages.summary('Erde', language: 'de');
 ```
 
-## Retries and Resilience
+Commons and custom clients have no language subdomain and ignore it.
 
-Wikimedia Dart automatically retries transient failures with exponential
-backoff. Because every request is an idempotent `GET`, retrying is safe. The
-following failures are retried:
+## Retries
 
-- `WikiRateLimitException` (HTTP 429)
-- `WikiServerException` with a 5xx status code (502/503/504, etc.)
-- `WikiNetworkException` (socket / DNS / connection failures)
-- `WikiTimeoutException` (request exceeded the configured timeout)
+Requests are all `GET`s, so failures that are likely to pass are retried:
+429, 5xx, network errors, and timeouts. A 404, any other 4xx, and a response
+that can't be parsed are thrown straight away. When the server sends
+`Retry-After` (on a 429 or 503), the client waits that long, up to
+`maxBackoff`.
 
-Non-transient failures are never retried: 404, parse errors, and 4xx responses
-other than 429. When the server sends a `Retry-After` header (on a 429 or 503),
-that value is used, capped at `maxBackoff`.
-
-Retries are **enabled by default** (3 retries; 500ms, 1s, 2s backoff). Tune
-or disable them via `RetryPolicy`:
+The default is 3 retries, waiting 500ms, 1s, then 2s. Change it with
+`RetryPolicy`:
 
 ```dart
-// Custom policy: 5 retries, faster initial backoff.
 final wiki = WikiClient.wikipedia(
   retryPolicy: const RetryPolicy(
     maxRetries: 5,
@@ -179,69 +151,75 @@ final wiki = WikiClient.wikipedia(
   ),
 );
 
-// Disable retries entirely.
-final noRetry = WikiClient.wikipedia(
-  retryPolicy: const RetryPolicy.none(),
-);
+// No retries.
+final once = WikiClient.wikipedia(retryPolicy: const RetryPolicy.none());
 ```
 
-If every retry is exhausted, the final failure is thrown as the corresponding
-`WikiException`, so existing error handling continues to work unchanged.
+When the retries run out, the last failure is thrown.
 
-## Error Handling
+## Errors
 
-Every HTTP status maps to a typed exception:
+Every failure is a `WikiException`:
 
-- `WikiNotFoundException`: 404, the resource doesn't exist.
-- `WikiRateLimitException`: 429, rate limit hit. Carries `retryAfter` when the API sends it.
-- `WikiRequestException`: a 4xx other than 404/429 (400, 401, 403, ...); the request itself was rejected.
-- `WikiServerException`: 5xx server error. Carries `retryAfter` when the server sends it.
-- `WikiNetworkException`: socket, DNS, or connection failure.
-- `WikiTimeoutException`: the request ran past the configured timeout.
-- `WikiParseException`: the response didn't match the expected shape.
+- `WikiNotFoundException`: 404, the page or file doesn't exist.
+- `WikiRateLimitException`: 429. Has `retryAfter` when the API sends it.
+- `WikiRequestException`: any other 4xx (400, 401, 403, ...).
+- `WikiServerException`: 5xx, or a status the package doesn't expect. Has
+  `retryAfter` when the server sends it.
+- `WikiNetworkException`: DNS, socket, or connection failure.
+- `WikiTimeoutException`: no response within the timeout.
+- `WikiParseException`: the response wasn't in the expected shape.
+
+When the server explains an error, its reason is included in the message.
 
 ```dart
 try {
-  final summary = await wiki.pages.summary('ThisPageDoesNotExist');
-} on WikiNotFoundException catch (e) {
-  print('Article not found: ${e.message}');
+  await wiki.pages.summary('ThisPageDoesNotExist');
+} on WikiNotFoundException {
+  print('No such article');
 } on WikiRateLimitException catch (e) {
-  print('Rate limited. Retry after: ${e.retryAfter}');
+  print('Rate limited, retry after ${e.retryAfter}');
 } on WikiException catch (e) {
-  print('General SDK exception: ${e.message}');
+  print(e.message);
 }
 ```
 
-## Supported Wikimedia Projects
+## Projects
 
-Named constructors cover the common cases:
+- `WikiClient.wikipedia()`: Wikipedia.
+- `WikiClient.wiktionary()`: Wiktionary.
+- `WikiClient.commons()`: Wikimedia Commons.
+- `WikiClient.custom(baseUrl: ...)`: a self-hosted MediaWiki, search only for
+  now (see below).
 
-- `WikiClient.wikipedia()`: Wikipedia, with a BCP 47 language.
-- `WikiClient.wiktionary()`: Wiktionary, with a BCP 47 language.
-- `WikiClient.commons()`: Wikimedia Commons (no language prefix).
-- `WikiClient.custom(baseUrl: 'https://wiki.example.org')`: any self-hosted MediaWiki.
+## Known limitations
 
-## Known Limitations
-
-Wikimedia's REST API doesn't expose `/page/summary/{title}` for Wiktionary, so `wiki.pages.summary()` on a Wiktionary client returns a 404 (`WikiNotFoundException`). It's an upstream gap; use `pages.html()` or `search` for Wiktionary instead.
-
-## Design notes
-
-Requests are read-only, so nothing here changes accounts or wiki content. URL construction lives in `UrlBuilder`, JSON parsing lives in the model classes, and the networking (headers, timeout, retries, error mapping) lives in `ServiceBase`. A client owns one `http.Client` and its connection pool, so call `close()` when you're done with it.
+- Wiktionary has no summary endpoint, so `pages.summary()` on a Wiktionary
+  client throws `WikiNotFoundException`. Use `pages.html()` or search there.
+- Wikidata has no summary or media-list endpoint either; only `pages.html()`
+  and search work.
+- `WikiClient.custom()` only uses the host of `baseUrl` and always connects
+  over HTTPS on the default port. Search works on a wiki that serves its
+  scripts from `/w`; summaries, HTML and media don't. Full support for
+  self-hosted wikis is planned for 0.2.0.
+- Browsers don't let web apps set `User-Agent`, so on Flutter web your
+  `userAgent` may not reach Wikimedia.
 
 ## Contributing
 
-Contributions are welcome. Before opening a PR, please check that:
+Before opening a PR, run:
 
-1. `dart analyze --fatal-infos` is clean.
-2. New behavior has unit tests (and integration tests where it makes sense).
-3. `dart format .` has been run.
+```bash
+dart format .
+dart analyze --fatal-infos
+dart test
+```
+
+New behavior needs unit tests. The live API tests are skipped by default;
+run them with `dart test --run-skipped --tags integration`.
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+MIT. See [LICENSE](LICENSE).
 
-## Author
-
-Developed and maintained by [Zaidusyy (Zaid Sayyed)](https://github.com/Zaidusyy).
-
+Maintained by [Zaid Sayyed](https://github.com/Zaidusyy).
