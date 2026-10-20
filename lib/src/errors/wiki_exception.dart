@@ -122,7 +122,9 @@ final class WikiRequestException extends WikiException {
   String get _name => 'WikiRequestException';
 }
 
-/// The server returned a 5xx error.
+/// The server returned a 5xx error, or a status this package doesn't
+/// expect at all (such as a 1xx, or a 2xx or 3xx other than 200). Check
+/// [statusCode] to tell them apart.
 final class WikiServerException extends WikiException {
   /// Creates a [WikiServerException].
   const WikiServerException({

@@ -24,7 +24,7 @@ class SearchClient with ServiceBase {
 
   /// Full-text search for [query].
   ///
-  /// [limit] caps the results (default 10, max 100). Pass [language] to search
+  /// [limit] caps the results: 1 to 100, default 10. Pass [language] to search
   /// a different wiki edition just for this call.
   Future<SearchResponse> pages(
     String query, {
@@ -46,7 +46,8 @@ class SearchClient with ServiceBase {
 
   /// Returns article titles matching [prefix], for type-ahead UIs.
   ///
-  /// Pass [language] to search a different wiki edition just for this call.
+  /// [limit] is 1 to 100, default 10. Pass [language] to search a different
+  /// wiki edition just for this call.
   Future<List<String>> autocomplete(
     String prefix, {
     int limit = 10,

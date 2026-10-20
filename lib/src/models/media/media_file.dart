@@ -17,7 +17,8 @@ class MediaFile {
     this.fileSizeBytes,
   });
 
-  /// File title, e.g. `'File:Earth_Western_Hemisphere.jpg'`.
+  /// File title as the API returns it, with spaces, e.g.
+  /// `'File:Earth Western Hemisphere.jpg'`.
   final String title;
 
   /// Direct URL to the full-resolution source file.

@@ -29,8 +29,11 @@ import 'wiki_config.dart';
 /// |---|---|---|
 /// | [WikiClient.wikipedia] | Wikipedia | Configurable (default: `'en'`) |
 /// | [WikiClient.wiktionary] | Wiktionary | Configurable |
-/// | [WikiClient.commons] | Wikimedia Commons | N/A |
-/// | [WikiClient.custom] | Any MediaWiki | Configurable |
+/// | [WikiClient.commons] | Wikimedia Commons | Not used |
+/// | [WikiClient.custom] | A self-hosted MediaWiki | Not used |
+///
+/// The per-call `language:` override works the same way: it picks the
+/// subdomain, so Commons, Wikidata and custom clients ignore it.
 class WikiClient {
   /// Creates a [WikiClient] with full explicit configuration.
   ///
@@ -61,14 +64,11 @@ class WikiClient {
         _httpClient = httpClient ?? http.Client(),
         _ownsHttpClient = httpClient == null;
 
-  // ---------------------------------------------------------------------------
-  // Named constructors
-  // ---------------------------------------------------------------------------
-
   /// Creates a [WikiClient] targeting Wikipedia.
   ///
-  /// [language] defaults to `'en'` (English Wikipedia). Pass any BCP 47
-  /// language code to target a different Wikipedia edition.
+  /// [language] is the wiki's subdomain and defaults to `'en'` (English
+  /// Wikipedia). Pass another one, such as `'fr'` or `'simple'`, to target a
+  /// different edition.
   factory WikiClient.wikipedia({
     String language = 'en',
     Duration timeout = const Duration(seconds: 30),
@@ -129,8 +129,12 @@ class WikiClient {
   /// Creates a [WikiClient] targeting a custom / self-hosted MediaWiki
   /// installation.
   ///
-  /// [baseUrl] must be the root URL of the MediaWiki installation, e.g.
-  /// `'https://wiki.example.org'`.
+  /// Support is limited in 0.1.x: only the host of [baseUrl] is used, and
+  /// every request goes over HTTPS on the default port. Search requests go
+  /// to `/w/rest.php/v1`, so [SearchClient] works on a wiki that serves its
+  /// scripts from `/w` (and [PagesClient.related] if it runs CirrusSearch).
+  /// Summaries, HTML and media go to `/api/rest_v1`, which only Wikimedia's
+  /// own wikis serve, so they return 404 elsewhere. [language] is not used.
   factory WikiClient.custom({
     required String baseUrl,
     String language = 'en',
@@ -151,10 +155,6 @@ class WikiClient {
         httpClient: httpClient,
       );
 
-  // ---------------------------------------------------------------------------
-  // Internal state
-  // ---------------------------------------------------------------------------
-
   final WikiConfig _config;
   final http.Client _httpClient;
 
@@ -163,10 +163,6 @@ class WikiClient {
   final bool _ownsHttpClient;
 
   bool _closed = false;
-
-  // ---------------------------------------------------------------------------
-  // Service getters (lazy, created once on first access)
-  // ---------------------------------------------------------------------------
 
   /// The pages service. Access via `wiki.pages.summary('Earth')`.
   late final PagesClient pages =
@@ -179,10 +175,6 @@ class WikiClient {
   /// The media service. Access via `wiki.media.listForPage('Earth')`.
   late final MediaClient media =
       MediaClient(_config, _httpClient, () => _closed);
-
-  // ---------------------------------------------------------------------------
-  // Lifecycle
-  // ---------------------------------------------------------------------------
 
   /// Closes this client and releases all resources.
   ///

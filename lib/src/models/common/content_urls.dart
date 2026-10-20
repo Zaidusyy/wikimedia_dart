@@ -22,7 +22,7 @@ class ContentUrls {
   /// ```json
   /// {
   ///   "desktop": { "page": "https://en.wikipedia.org/wiki/Earth" },
-  ///   "mobile":  { "page": "https://en.m.wikipedia.org/wiki/Earth" }
+  ///   "mobile":  { "page": "https://en.wikipedia.org/wiki/Earth" }
   /// }
   /// ```
   factory ContentUrls.fromJson(Map<String, dynamic> json) => ContentUrls(

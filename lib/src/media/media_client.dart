@@ -45,7 +45,12 @@ class MediaClient with ServiceBase {
     );
   }
 
-  /// Metadata for a single file, e.g. one hosted on Commons.
+  /// Metadata for a single file.
+  ///
+  /// Files used in Wikipedia articles almost all live on Commons, so call
+  /// this on `WikiClient.commons()`. A Wikipedia client only finds files
+  /// uploaded to that wiki itself, and throws `WikiNotFoundException` for
+  /// the rest.
   ///
   /// [fileTitle] should keep the `File:` prefix, like
   /// `'File:Earth_Western_Hemisphere.jpg'`.

@@ -59,9 +59,12 @@ class PagesClient with ServiceBase {
   /// `/page/related/` endpoint was restricted upstream (HTTP 403) and is no
   /// longer usable, so this method uses "more like this" search instead.
   ///
-  /// [limit] controls the maximum number of related pages (default: 10).
+  /// [limit] is the maximum number of related pages: 1 to 100, default 10.
   /// [language] overrides the client's default language for this request
   /// only.
+  ///
+  /// Returns an empty list when [title] doesn't exist: the search endpoint
+  /// can't tell a missing page from one with nothing similar.
   Future<List<SearchResultItem>> related(
     String title, {
     int limit = 10,

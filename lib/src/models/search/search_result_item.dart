@@ -14,7 +14,7 @@ class SearchResultItem {
     this.thumbnail,
   });
 
-  /// Canonical article title.
+  /// Article title with spaces.
   final String title;
 
   /// Wikimedia page identifier.

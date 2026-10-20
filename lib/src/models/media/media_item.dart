@@ -13,13 +13,17 @@ class MediaItem {
     this.caption,
   });
 
-  /// File title, e.g. `'File:Earth_Western_Hemisphere.jpg'`.
+  /// File title with underscores, e.g. `'File:Earth_Western_Hemisphere.jpg'`.
+  ///
+  /// `MediaFile.title` uses spaces instead, so compare the two with that in
+  /// mind.
   final String title;
 
-  /// Media type: `'image'`, `'video'`, or `'audio'`.
+  /// Media type as the API reports it, e.g. `'image'`, `'video'`, `'audio'`.
   final String type;
 
-  /// Direct URL to the media file, if available.
+  /// For images, the display thumbnail from the API's `srcset` (about 500px
+  /// wide), not the original file. Null for video and audio.
   final String? srcUrl;
 
   /// Caption text for this media item, if available.

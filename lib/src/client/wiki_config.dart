@@ -19,7 +19,7 @@ final class WikiConfig {
     this.retryPolicy = const RetryPolicy(),
   });
 
-  /// BCP 47 language code, e.g. `'en'`, `'fr'`, `'zh'`.
+  /// The wiki's language subdomain, e.g. `'en'`, `'fr'`, `'simple'`.
   final String language;
 
   /// The Wikimedia project this client is targeting.

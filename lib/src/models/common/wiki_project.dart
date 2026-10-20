@@ -25,6 +25,9 @@ enum WikiProject {
   wikivoyage,
 
   /// Wikidata (https://wikidata.org). No language prefix.
+  ///
+  /// Only `pages.html()` and search work here. Wikimedia doesn't serve
+  /// summaries or media lists for Wikidata, so those calls return 404.
   wikidata;
 
   /// The base domain for this project.

@@ -22,22 +22,28 @@ class PageSummary {
     this.lastModified,
   });
 
-  /// Canonical article title, e.g. `'Earth'`.
+  /// Article title with spaces, e.g. `'New York City'`.
   final String title;
 
-  /// HTML-formatted display title, e.g. `'<i>Earth</i>'`.
+  /// The title as HTML, as the wiki displays it (it may carry markup such as
+  /// `<span>` or `<i>`).
   final String displayTitle;
 
   /// Wikimedia page identifier.
   final int pageId;
 
-  /// BCP 47 language code of this article, e.g. `'en'`.
+  /// Content language reported by the API, e.g. `'en'`.
+  ///
+  /// Not always the wiki's subdomain: Simple English Wikipedia reports
+  /// `'en'` and Cantonese Wikipedia `'yue'`. To call the same wiki again,
+  /// reuse the language you passed in.
   final String language;
 
   /// Short description of the article, e.g. `'Third planet from the Sun'`.
   final String? description;
 
-  /// Plain-text extract (may be truncated for long articles).
+  /// Plain-text extract, may be truncated for long articles. Can be empty,
+  /// for example on a main page or a file page.
   final String? extract;
 
   /// HTML version of the extract.
